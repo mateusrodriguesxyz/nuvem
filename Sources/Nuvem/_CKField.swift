@@ -1,12 +1,33 @@
 import CloudKit
 import Combine
 
-public protocol CKFieldProtocol: AnyObject {
-    var key: String { get }
-    var record: CKRecord! { get set }
+public protocol CKFieldValueMapper<Value> {
+    
+    associatedtype Value
+    
+    func get(_ record: CKRecord) -> Value?
+    func set(_ value: Value?, _ record: CKRecord)
+    
 }
 
-@propertyWrapper public class CKField<Value: CKFieldValue>: CKFieldProtocol {
+public struct KeyedCKFieldValueMapper<Value>: CKFieldValueMapper {
+    
+    let key: String
+    
+    let getter: (CKRecordValue?) -> Value?
+    let setter: (Value?) -> CKRecordValue?
+    
+    public func get(_ record: CKRecord) -> Value? {
+        getter(record[key])
+    }
+    
+    public func set(_ value: Value?, _ record: CKRecord) {
+        record[key] = setter(value)
+    }
+    
+}
+
+@propertyWrapper public class CKField<Value, Mapper>: CKFieldProtocol where Mapper: CKFieldValueMapper<Value> {
     
     public let key: String
     
@@ -14,22 +35,24 @@ public protocol CKFieldProtocol: AnyObject {
         didSet {
             if oldValue == nil, let valueForNilRecord {
                 print("updating 'record' with 'valueForNilRecord'")
-                record![key] = Value.set(valueForNilRecord)
+                mapper.set(valueForNilRecord, record)
             }
         }
     }
+    
+    private let mapper: Mapper
     
     private let defaultValue: Value?
     
     private var valueForNilRecord: Value?
     
     public var value: Value? {
-        Value.get(record![key])
+        mapper.get(record)
     }
 
     public var wrappedValue: Value {
         get {
-            if let recordValue = Value.get(record[key]) {
+            if let recordValue = mapper.get(record) {
                 return recordValue
             }
             else if let defaultValue {
@@ -42,24 +65,26 @@ public protocol CKFieldProtocol: AnyObject {
         set {
             publisher.send(newValue)
             if let record {
-                record[key] = Value.set(newValue)
+                mapper.set(newValue, record)
             } else {
                 valueForNilRecord = newValue
             }
         }
     }
     
-    public var projectedValue: CKField<Value> { self }
+    public var projectedValue: CKField<Value, Mapper> { self }
     
     public lazy var publisher = PassthroughSubject<Value, Never>()
     
-    public init(_ key: String, default defaultValue: Value) {
+    public init(_ key: String, mapper: Mapper) {
         self.key = key
-        self.defaultValue = defaultValue
+        self.mapper = mapper
+        self.defaultValue = nil
     }
     
-    public init(_ key: String) {
+    public init(_ key: String) where Value: CKFieldValue, Mapper == KeyedCKFieldValueMapper<Value> {
         self.key = key
+        self.mapper = KeyedCKFieldValueMapper(key: key, getter: Value.get, setter: Value.set)
         self.defaultValue = nil
     }
     

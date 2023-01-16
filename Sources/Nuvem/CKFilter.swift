@@ -53,37 +53,37 @@ public struct CKLogicFilter<Model: CKModel>: CKFilter {
     
 }
 
-public func == <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
+public func == <Model: CKModel, Value: CKFilterableValue, Mapper: CKFieldValueMapper>(lhs: KeyPath<Model, CKField<Value, Mapper>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     let key = Model.init()[keyPath: lhs].key
     let value = rhs
     return CKComparisonFilter(key: key, value: value.attributeValue, _operator: .isEqualTo)
 }
 
-public func != <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
+public func != <Model: CKModel, Value: CKFilterableValue, Mapper: CKFieldValueMapper>(lhs: KeyPath<Model, CKField<Value, Mapper>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     let key = Model.init()[keyPath: lhs].key
     let value = rhs
     return CKComparisonFilter(key: key, value: value.attributeValue, _operator: .isNotEqualTo)
 }
 
-public func > <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
+public func > <Model: CKModel, Value: CKFilterableValue, Mapper: CKFieldValueMapper>(lhs: KeyPath<Model, CKField<Value, Mapper>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     let key = Model.init()[keyPath: lhs].key
     let value = rhs
     return CKComparisonFilter(key: key, value: value.attributeValue, _operator: .isGreaterThan)
 }
 
-public func >= <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
+public func >= <Model: CKModel, Value: CKFilterableValue, Mapper: CKFieldValueMapper>(lhs: KeyPath<Model, CKField<Value, Mapper>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     let key = Model.init()[keyPath: lhs].key
     let value = rhs
     return CKComparisonFilter(key: key, value: value.attributeValue, _operator: .isGreaterThanOrEqualTo)
 }
 
-public func < <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
+public func < <Model: CKModel, Value: CKFilterableValue, Mapper: CKFieldValueMapper>(lhs: KeyPath<Model, CKField<Value, Mapper>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     let key = Model.init()[keyPath: lhs].key
     let value = rhs
     return CKComparisonFilter(key: key, value: value.attributeValue, _operator: .isLessThan)
 }
 
-public func <= <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
+public func <= <Model: CKModel, Value: CKFilterableValue, Mapper: CKFieldValueMapper>(lhs: KeyPath<Model, CKField<Value, Mapper>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     let key = Model.init()[keyPath: lhs].key
     let value = rhs
     return CKComparisonFilter(key: key, value: value.attributeValue, _operator: .isLessThanOrEqualTo)
