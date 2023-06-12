@@ -69,6 +69,26 @@ final class NuvemTests: XCTestCase {
         print(#function)
     }
     
+    func testModelWithOptionalField() {
+        
+        struct Person: CKModel {
+            
+            var record: CKRecord!
+            
+            @CKField("name", default: "Mateus")
+            var name: String
+            
+            @CKField("age")
+            var age: Int?
+            
+        }
+        
+        let person = Person()
+        
+        XCTAssertNil(person.age)
+        
+    }
+    
     func testCKFieldValue_RawRepresentable() {
         
         enum E: String, CKFieldValue {

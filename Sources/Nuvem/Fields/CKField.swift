@@ -61,6 +61,12 @@ import Combine
         self.storage = .init(key: key)
     }
     
+    public init(_ key: String) where Value: ExpressibleByNilLiteral {
+        self.key = key
+        self.defaultValue = .some(nil)
+        self.storage = .init(key: key)
+    }
+    
     func load(on database: CKDatabase) async throws -> Value? {
         guard let record = storage.record else { return nil }
         let id = record.recordID
