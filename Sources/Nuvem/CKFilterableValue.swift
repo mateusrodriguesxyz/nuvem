@@ -18,7 +18,7 @@ extension Int: CKFilterableValue, AttributeValueProtocol {
 
 extension Double: CKFilterableValue, AttributeValueProtocol {
     public var attributeValue: CVarArg {
-        self
+        NSNumber(value: self)
     }
 }
 

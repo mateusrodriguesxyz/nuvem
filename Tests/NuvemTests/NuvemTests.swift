@@ -368,7 +368,7 @@ final class NuvemTests: XCTestCase {
         
         let p2 = f2.predicate
         
-        XCTAssertEqual(p2, NSPredicate(format: "b == %@", 1.5))
+        XCTAssertEqual(p2, NSPredicate(format: "b == %@", NSNumber(value: 1.5)))
         
         let f3: some CKFilter<M> = \.$c == "hello"
         
