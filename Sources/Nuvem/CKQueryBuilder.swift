@@ -25,7 +25,7 @@ public final class CKQueryBuilder<Model> where Model: CKModel {
         return self
     }
     
-    public func sort(_ field: KeyPath<Model, some CKFieldProtocol>, order: CKSort<Model>.Order = .ascending) -> Self {
+    public func sort(_ field: KeyPath<Model, some CKFieldProtocol>, order: CKSort<Model>.Order = .descending) -> Self {
         sortDescriptorsBuilder.add(CKSort(field, order: order))
         return self
     }
