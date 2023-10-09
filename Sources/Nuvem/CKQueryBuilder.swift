@@ -143,6 +143,12 @@ public final class CKQueryBuilder<Model> where Model: CKModel {
         return self
     }
     
+    public func with<Value>(_ field: KeyPath<Model, CKReferenceListField<Value>>) -> Self {
+        let query = EagerLoadQuery(field: field)
+        eagerLoadQueries.append(query)
+        return self
+    }
+    
     public func with<Value>(_ field: KeyPath<Model, CKReferenceField<Value>>) -> Self {
         let query = EagerLoadQuery(field: field)
         eagerLoadQueries.append(query)
@@ -228,11 +234,17 @@ public final class CKQueryBuilder<Model> where Model: CKModel {
         
         for query in eagerLoadQueries {
             
-            let fields = models.map {
-                $0[keyPath: query.fieldKeyPath] as! (any CKReferenceFieldProtocol)
+            let fields = models.compactMap {
+                $0[keyPath: query.fieldKeyPath] as? (any CKReferenceFieldProtocol)
             }
             
             try await query.run(for: fields, on: database)
+            
+            let fields2 = models.compactMap {
+                $0[keyPath: query.fieldKeyPath] as? (any CKReferenceListFieldProtocol)
+            }
+            
+            try await query.run(for: fields2, on: database)
             
         }
         

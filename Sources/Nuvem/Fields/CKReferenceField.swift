@@ -23,7 +23,7 @@ import CloudKit
             if let value {
                 return value
             } else {
-                return storage.referenceRecord.map(Value.init)
+                return storage.referenceRecords?.first.map(Value.init)
             }
         }
         set {
