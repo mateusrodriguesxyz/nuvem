@@ -1,6 +1,7 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.9
 
 import PackageDescription
+import CompilerPluginSupport
 
 let package = Package(
     name: "Nuvem",
@@ -14,11 +15,20 @@ let package = Package(
             targets: ["Nuvem"]
         ),
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-syntax.git", from: "509.0.0"),
+    ],
     targets: [
+        .macro(
+            name: "MacroImplementation",
+            dependencies: [
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
+            ]
+        ),
         .target(
             name: "Nuvem",
-            dependencies: []
+            dependencies: ["MacroImplementation"]
         ),
         .testTarget(
             name: "NuvemTests",

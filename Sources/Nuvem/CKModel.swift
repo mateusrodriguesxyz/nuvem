@@ -1,6 +1,11 @@
 import CloudKit
 import SwiftUI
 
+@attached(member, names: named(record), named(creationDate), named(modificationDate), named(init))
+@attached(memberAttribute)
+@attached(extension, conformances: CKModel)
+public macro CKModel() = #externalMacro(module: "MacroImplementation", type: "CKModelMacro")
+
 public protocol CKModel: Identifiable where ID == String {
     static var recordType: CKRecord.RecordType { get }
     var record: CKRecord! { get set }
