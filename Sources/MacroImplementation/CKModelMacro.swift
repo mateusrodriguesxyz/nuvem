@@ -26,7 +26,8 @@ extension CKModelMacro: MemberMacro {
         
         let initDecl1: DeclSyntax = "init() { }"
         
-        let properties = declaration.as(StructDeclSyntax.self)?.memberBlock.members.compactMap( { $0.decl.as(VariableDeclSyntax.self) }) ?? []
+        let properties = declaration.as(StructDeclSyntax.self)?.memberBlock.members.compactMap( { $0.decl.as(VariableDeclSyntax.self) })
+            .filter({ $0.bindings.first?.accessorBlock == nil }) ?? []
         
         let identifiers = properties.compactMap({ $0.bindings.first?.pattern.as(IdentifierPatternSyntax.self) })
         let types = properties.compactMap({ $0.bindings.first?.typeAnnotation })
@@ -75,7 +76,12 @@ extension CKModelMacro: MemberAttributeMacro {
         providingAttributesFor member: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [AttributeSyntax] {
-        if let variable = member.as(VariableDeclSyntax.self), variable.attributes.isEmpty,  let key = variable.bindings.first?.pattern.as(IdentifierPatternSyntax.self)?.trimmedDescription {
+        if
+            let variable = member.as(VariableDeclSyntax.self), 
+            variable.attributes.isEmpty,
+            variable.bindings.first?.accessorBlock == nil,
+            let key = variable.bindings.first?.pattern.as(IdentifierPatternSyntax.self)?.trimmedDescription
+        {
             return ["@CKField(\(literal: key))"]
         } else {
             return []
