@@ -39,11 +39,11 @@ extension CKComparisonFilter {
         self.init(key: field.key, value: value.attributeValue, _operator: `operator`)
     }
     
-    public init<Value: CKModel>(_ field: KeyPath<Model, CKReferenceField<Value>>, _ `operator`: Operator, _ value: Value) {
+    public init<Value: CKModel>(_ field: KeyPath<Model, CKReferenceFieldOne<Value>>, _ `operator`: Operator, _ value: Value) {
         self.init(key: field.key, value: value.record.recordID, _operator: `operator`)
     }
     
-    public init<Value: CKModel>(_ field: KeyPath<Model, CKReferenceField<Value>>, _ `operator`: Operator, _ value: String) {
+    public init<Value: CKModel>(_ field: KeyPath<Model, CKReferenceFieldOne<Value>>, _ `operator`: Operator, _ value: String) {
         self.init(key: field.key, value: CKRecord.ID(recordName: value), _operator: `operator`)
     }
     
@@ -96,19 +96,19 @@ public func <= <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CK
 
 
 
-public func == <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceField<Value>>, rhs: Value) -> CKComparisonFilter<Model> {
+public func == <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceFieldOne<Value>>, rhs: Value) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isEqualTo, rhs)
 }
 
-public func == <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceField<Value>>, rhs: Value.ID) -> CKComparisonFilter<Model> {
+public func == <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceFieldOne<Value>>, rhs: Value.ID) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isEqualTo, rhs)
 }
 
-public func != <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceField<Value>>, rhs: Value) -> CKComparisonFilter<Model> {
+public func != <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceFieldOne<Value>>, rhs: Value) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isNotEqualTo, rhs)
 }
 
-public func != <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceField<Value>>, rhs: Value.ID) -> CKComparisonFilter<Model> {
+public func != <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceFieldOne<Value>>, rhs: Value.ID) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isNotEqualTo, rhs)
 }
 

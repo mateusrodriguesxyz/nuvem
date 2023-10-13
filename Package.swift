@@ -32,7 +32,10 @@ let package = Package(
         ),
         .testTarget(
             name: "NuvemTests",
-            dependencies: ["Nuvem"]
+            dependencies: [
+                "Nuvem",
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+            ]
         ),
     ]
 )

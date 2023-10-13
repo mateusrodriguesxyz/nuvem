@@ -4,6 +4,7 @@ import SwiftSyntaxMacros
 @main
 struct SwiftMacrosPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
-        CKModelMacro.self
+        CKModelMacro.self,
+        CKReferenceFieldMacro.self,
     ]
 }

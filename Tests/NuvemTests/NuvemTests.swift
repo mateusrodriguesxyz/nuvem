@@ -37,10 +37,10 @@ final class NuvemTests: XCTestCase {
         @CKField("f", default: 0)
         var f: Int
         
-        @CKReferenceField("r")
+        @CKReferenceFieldOne("r")
         var r: M2?
         
-        @CKReferenceField("rf")
+        @CKReferenceFieldOne("rf")
         var rf: M2?
         
         @CKAssetField("af")
@@ -169,7 +169,7 @@ final class NuvemTests: XCTestCase {
     
     func testCKReferenceField() {
         
-        @CKReferenceField("m2") var m2: M2?
+        @CKReferenceFieldOne("m2") var m2: M2?
         
         let r = CKRecord(recordType: M2.recordType)
         

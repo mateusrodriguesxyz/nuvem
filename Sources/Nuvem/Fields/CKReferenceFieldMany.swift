@@ -1,6 +1,6 @@
 import CloudKit
 
-@propertyWrapper public struct CKReferenceListField<Value: CKModel>: CKReferenceListFieldProtocol, _CKFieldProtocol {
+@propertyWrapper public struct CKReferenceFieldMany<Value: CKModel>: CKReferenceListFieldProtocol, _CKFieldProtocol {
     
     var hasBeenSet: Bool = false
     
@@ -39,7 +39,7 @@ import CloudKit
         }
     }
     
-    public var projectedValue: CKReferenceListField<Value> { self }
+    public var projectedValue: CKReferenceFieldMany<Value> { self }
     
     public init(_ key: String) {
         self.key = key
