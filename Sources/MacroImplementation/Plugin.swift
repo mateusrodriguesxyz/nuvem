@@ -6,5 +6,6 @@ struct SwiftMacrosPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         CKModelMacro.self,
         CKReferenceFieldMacro.self,
+        CKAssetFieldMacro.self
     ]
 }

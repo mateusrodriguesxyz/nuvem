@@ -125,6 +125,20 @@ extension CKModelMacro: MemberAttributeMacro {
             
         }
         
+        if let attribute = variable.attributes.first, attribute.trimmedDescription.contains("@CKAssetField") == true {
+            
+            let key: DeclSyntax
+            
+            if let argument = attribute.as(AttributeSyntax.self)?.arguments?.trimmedDescription {
+                key = "\(raw: argument)"
+            } else {
+                key = "\(literal: identifier)"
+            }
+            
+            return ["@CKFields.Asset(\(key))"]
+            
+        }
+        
         if variable.attributes.isEmpty {
             return ["@CKField(\(literal: identifier))"]
         }

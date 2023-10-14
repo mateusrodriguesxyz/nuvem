@@ -23,7 +23,7 @@ final class MacrosTests: XCTestCase {
             struct M2 {
             
                 public static var recordType: CKRecord.RecordType {
-                    String(describing: "M2")
+                    "M2"
                 }
             
                 var record: CKRecord!
@@ -87,7 +87,7 @@ final class MacrosTests: XCTestCase {
                 var f5: [M2]?
             
                 public static var recordType: CKRecord.RecordType {
-                    String(describing: "M1")
+                    "M1"
                 }
             
                 var record: CKRecord!

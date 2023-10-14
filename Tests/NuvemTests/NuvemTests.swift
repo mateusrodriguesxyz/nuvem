@@ -43,7 +43,7 @@ final class NuvemTests: XCTestCase {
         @CKReferenceFieldOne("rf")
         var rf: M2?
         
-        @CKAssetField("af")
+        @CKFields.Asset("af")
         var af: Data?
         
         @CKField("ee")
