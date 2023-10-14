@@ -143,20 +143,20 @@ public final class CKQueryBuilder<Model> where Model: CKModel {
         return self
     }
     
-    public func with<Value>(_ field: KeyPath<Model, CKReferenceFieldMany<Value>>) -> Self {
+    public func with<Value>(_ field: KeyPath<Model, CKReferenceFields.Many<Value>>) -> Self {
         let query = EagerLoadQuery(field: field)
         eagerLoadQueries.append(query)
         return self
     }
     
-    public func with<Value>(_ field: KeyPath<Model, CKReferenceFieldOne<Value>>) -> Self {
+    public func with<Value>(_ field: KeyPath<Model, CKReferenceFields.One<Value>>) -> Self {
         let query = EagerLoadQuery(field: field)
         eagerLoadQueries.append(query)
         return self
     }
     
     public func with<Value>(
-        _ referenceField: KeyPath<Model, CKReferenceFieldOne<Value>>,
+        _ referenceField: KeyPath<Model, CKReferenceFields.One<Value>>,
         _ f0: KeyPath<Value, some CKFieldProtocol>
     ) -> Self {
         let query = EagerLoadQuery(field: referenceField, desiredFields: f0)
@@ -165,7 +165,7 @@ public final class CKQueryBuilder<Model> where Model: CKModel {
     }
     
     public func with<Value>(
-        _ referenceField: KeyPath<Model, CKReferenceFieldOne<Value>>,
+        _ referenceField: KeyPath<Model, CKReferenceFields.One<Value>>,
         _ f0: KeyPath<Value, some CKFieldProtocol>,
         _ f1: KeyPath<Value, some CKFieldProtocol>
     ) -> Self {
@@ -175,7 +175,7 @@ public final class CKQueryBuilder<Model> where Model: CKModel {
     }
 
     public func with<Value>(
-        _ referenceField: KeyPath<Model, CKReferenceFieldOne<Value>>,
+        _ referenceField: KeyPath<Model, CKReferenceFields.One<Value>>,
         _ f0: KeyPath<Value, some CKFieldProtocol>,
         _ f1: KeyPath<Value, some CKFieldProtocol>,
         _ f2: KeyPath<Value, some CKFieldProtocol>
@@ -186,7 +186,7 @@ public final class CKQueryBuilder<Model> where Model: CKModel {
     }
 
     public func with<Value>(
-        _ referenceField: KeyPath<Model, CKReferenceFieldOne<Value>>,
+        _ referenceField: KeyPath<Model, CKReferenceFields.One<Value>>,
         _ f0: KeyPath<Value, some CKFieldProtocol>,
         _ f1: KeyPath<Value, some CKFieldProtocol>,
         _ f2: KeyPath<Value, some CKFieldProtocol>,
@@ -198,7 +198,7 @@ public final class CKQueryBuilder<Model> where Model: CKModel {
     }
 
     public func with<Value>(
-        _ referenceField: KeyPath<Model, CKReferenceFieldOne<Value>>,
+        _ referenceField: KeyPath<Model, CKReferenceFields.One<Value>>,
         _ f0: KeyPath<Value, some CKFieldProtocol>,
         _ f1: KeyPath<Value, some CKFieldProtocol>,
         _ f2: KeyPath<Value, some CKFieldProtocol>,

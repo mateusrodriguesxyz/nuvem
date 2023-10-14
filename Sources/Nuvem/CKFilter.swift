@@ -35,15 +35,15 @@ public struct CKComparisonFilter<Model: CKModel>: CKFilter {
 
 extension CKComparisonFilter {
     
-    public init<Value: CKFilterableValue>(_ field: KeyPath<Model, CKField<Value>>, _ `operator`: Operator, _ value: Value.AttributeValue) {
+    public init<Value: CKFilterableValue>(_ field: KeyPath<Model, CKFields.Default<Value>>, _ `operator`: Operator, _ value: Value.AttributeValue) {
         self.init(key: field.key, value: value.attributeValue, _operator: `operator`)
     }
     
-    public init<Value: CKModel>(_ field: KeyPath<Model, CKReferenceFieldOne<Value>>, _ `operator`: Operator, _ value: Value) {
+    public init<Value: CKModel>(_ field: KeyPath<Model, CKReferenceFields.One<Value>>, _ `operator`: Operator, _ value: Value) {
         self.init(key: field.key, value: value.record.recordID, _operator: `operator`)
     }
     
-    public init<Value: CKModel>(_ field: KeyPath<Model, CKReferenceFieldOne<Value>>, _ `operator`: Operator, _ value: String) {
+    public init<Value: CKModel>(_ field: KeyPath<Model, CKReferenceFields.One<Value>>, _ `operator`: Operator, _ value: String) {
         self.init(key: field.key, value: CKRecord.ID(recordName: value), _operator: `operator`)
     }
     
@@ -70,55 +70,55 @@ public struct CKLogicFilter<Model: CKModel>: CKFilter {
     
 }
 
-public func == <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
+public func == <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKFields.Default<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isEqualTo, rhs)
 }
 
-public func != <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
+public func != <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKFields.Default<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isNotEqualTo, rhs)
 }
 
-public func > <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
+public func > <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKFields.Default<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isGreaterThan, rhs)
 }
 
-public func >= <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
+public func >= <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKFields.Default<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isGreaterThanOrEqualTo, rhs)
 }
 
-public func < <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
+public func < <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKFields.Default<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isLessThan, rhs)
 }
 
-public func <= <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
+public func <= <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKFields.Default<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isLessThanOrEqualTo, rhs)
 }
 
 
 
-public func == <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceFieldOne<Value>>, rhs: Value) -> CKComparisonFilter<Model> {
+public func == <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceFields.One<Value>>, rhs: Value) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isEqualTo, rhs)
 }
 
-public func == <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceFieldOne<Value>>, rhs: Value.ID) -> CKComparisonFilter<Model> {
+public func == <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceFields.One<Value>>, rhs: Value.ID) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isEqualTo, rhs)
 }
 
-public func != <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceFieldOne<Value>>, rhs: Value) -> CKComparisonFilter<Model> {
+public func != <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceFields.One<Value>>, rhs: Value) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isNotEqualTo, rhs)
 }
 
-public func != <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceFieldOne<Value>>, rhs: Value.ID) -> CKComparisonFilter<Model> {
+public func != <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceFields.One<Value>>, rhs: Value.ID) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isNotEqualTo, rhs)
 }
 
 
 
-public func == <Model: CKModel, Value: RawRepresentable>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value) -> CKComparisonFilter<Model> where Value.RawValue: AttributeValueProtocol {
+public func == <Model: CKModel, Value: RawRepresentable>(lhs: KeyPath<Model, CKFields.Default<Value>>, rhs: Value) -> CKComparisonFilter<Model> where Value.RawValue: AttributeValueProtocol {
     return CKComparisonFilter(key: lhs.key, value: rhs.rawValue.attributeValue, _operator: .isEqualTo)
 }
 
-public func != <Model: CKModel, Value: RawRepresentable>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value) -> CKComparisonFilter<Model> where Value.RawValue: AttributeValueProtocol {
+public func != <Model: CKModel, Value: RawRepresentable>(lhs: KeyPath<Model, CKFields.Default<Value>>, rhs: Value) -> CKComparisonFilter<Model> where Value.RawValue: AttributeValueProtocol {
     return CKComparisonFilter(key: lhs.key, value: rhs.rawValue.attributeValue, _operator: .isNotEqualTo)
 }
 
@@ -157,39 +157,39 @@ extension CKFilter {
 
 extension CKFilter {
     
-    public static func isDateInThisYear<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKField<Value>>) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
+    public static func isDateInThisYear<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKFields.Default<Value>>) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
         return isDate(field, inSameYearAs: .now)
     }
 
-    public static func isDateInThisMonth<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKField<Value>>) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
+    public static func isDateInThisMonth<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKFields.Default<Value>>) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
         return isDate(field, inSameMonthAs: .now)
     }
 
-    public static func isDateInToday<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKField<Value>>) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
+    public static func isDateInToday<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKFields.Default<Value>>) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
         return isDate(field, inSameDayAs: .now)
     }
 
-    public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKField<Value>>, inSameYearAs date: Date) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
+    public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKFields.Default<Value>>, inSameYearAs date: Date) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
         return isDate(field, in: date.bounds(of: .year))
     }
 
-    public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKField<Value>>, inSameMonthAs date: Date) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
+    public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKFields.Default<Value>>, inSameMonthAs date: Date) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
         return isDate(field, in: date.bounds(of: .month))
     }
 
-    public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKField<Value>>, inSameDayAs date: Date) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
+    public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKFields.Default<Value>>, inSameDayAs date: Date) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
         return isDate(field, in: date.bounds(of: .day))
     }
 
-    public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKField<Value>>, inSameHourAs date: Date) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
+    public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKFields.Default<Value>>, inSameHourAs date: Date) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
         return isDate(field, in: date.bounds(of: .hour))
     }
 
-    public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKField<Value>>, inSameMinuteAs date: Date) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
+    public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKFields.Default<Value>>, inSameMinuteAs date: Date) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
         return isDate(field, in: date.bounds(of: .minute))
     }
     
-    public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKField<Value>>, in range: ClosedRange<Date>) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
+    public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKFields.Default<Value>>, in range: ClosedRange<Date>) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
         return field >= range.lowerBound && field <= range.upperBound
     }
     

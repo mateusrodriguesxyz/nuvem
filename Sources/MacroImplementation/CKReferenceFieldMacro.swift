@@ -1,7 +1,6 @@
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
-import SwiftDiagnostics
 
 public enum CKReferenceFieldMacro { }
 

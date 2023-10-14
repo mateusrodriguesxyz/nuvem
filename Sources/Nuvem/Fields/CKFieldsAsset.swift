@@ -3,7 +3,7 @@ import CloudKit
 @attached(accessor, names: named(`didSet`))
 public macro CKAssetField(_ key: String? = nil) = #externalMacro(module: "MacroImplementation", type: "CKAssetFieldMacro")
 
-public enum CKFields {
+extension CKFields {
     
     @propertyWrapper public struct Asset<Value: CKAssetFieldValue>: CKFieldProtocol, _CKFieldProtocol {
         

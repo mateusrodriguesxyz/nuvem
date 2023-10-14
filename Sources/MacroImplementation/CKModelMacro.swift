@@ -7,19 +7,19 @@ public enum CKModelMacro { }
 extension CKModelMacro: MemberMacro {
    
     public static func expansion(
-        of node: SwiftSyntax.AttributeSyntax,
-        providingMembersOf declaration: some SwiftSyntax.DeclGroupSyntax,
-        in context: some SwiftSyntaxMacros.MacroExpansionContext
-    ) throws -> [SwiftSyntax.DeclSyntax] {
+        of node: AttributeSyntax,
+        providingMembersOf declaration: some DeclGroupSyntax,
+        in context: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
         
-        guard let declaration = declaration.as(StructDeclSyntax.self) else { return [] }
+        guard let structDecl = declaration.as(StructDeclSyntax.self) else { return [] }
         
         let recordName: DeclSyntax
         
         if let argument = node.arguments?.trimmedDescription {
             recordName = "\(raw: argument)"
         } else {
-            recordName = "\(literal: declaration.name.text)"
+            recordName = "\(literal: structDecl.name.text)"
         }
         
         let recordTypeDecl: DeclSyntax = "public static var recordType: CKRecord.RecordType { \(recordName) }"
@@ -37,12 +37,10 @@ extension CKModelMacro: MemberMacro {
         """
         
         var initDecls = [DeclSyntax]()
+                
+        initDecls.append("init() { }")
         
-        let initDecl1: DeclSyntax = "init() { }"
-        
-        initDecls.append(initDecl1)
-        
-        let properties = declaration.memberBlock.members.compactMap( { $0.decl.as(VariableDeclSyntax.self) })
+        let properties = structDecl.memberBlock.members.compactMap( { $0.decl.as(VariableDeclSyntax.self) })
             .filter({ $0.bindings.first?.accessorBlock == nil }) ?? []
         
         if !properties.isEmpty {
@@ -50,13 +48,13 @@ extension CKModelMacro: MemberMacro {
             let identifiers = properties.compactMap({ $0.bindings.first?.pattern.as(IdentifierPatternSyntax.self) })
             let types = properties.compactMap({ $0.bindings.first?.typeAnnotation })
             
-            let initDecl2: DeclSyntax = """
+            let  memberwiseInitDecl: DeclSyntax = """
         init(\(raw: zip(identifiers, types).map({ "\($0.0.trimmedDescription)\($0.1.trimmedDescription)" }).joined(separator: ", "))) {
         \(raw: identifiers.map({ "self.\($0.trimmedDescription) = \($0.trimmedDescription)" }).joined(separator: "\n"))
         }
         """
             
-            initDecls.append(initDecl2)
+            initDecls.append(memberwiseInitDecl)
             
         }
         
@@ -71,12 +69,12 @@ extension CKModelMacro: MemberMacro {
 extension CKModelMacro: ExtensionMacro {
     
     public static func expansion(
-        of node: SwiftSyntax.AttributeSyntax,
-        attachedTo declaration: some SwiftSyntax.DeclGroupSyntax,
-        providingExtensionsOf type: some SwiftSyntax.TypeSyntaxProtocol,
-        conformingTo protocols: [SwiftSyntax.TypeSyntax],
-        in context: some SwiftSyntaxMacros.MacroExpansionContext
-    ) throws -> [SwiftSyntax.ExtensionDeclSyntax] {
+        of node: AttributeSyntax,
+        attachedTo declaration: some DeclGroupSyntax,
+        providingExtensionsOf type: some TypeSyntaxProtocol,
+        conformingTo protocols: [TypeSyntax],
+        in context: some MacroExpansionContext
+    ) throws -> [ExtensionDeclSyntax] {
         
         let decl = try ExtensionDeclSyntax(
         #"""
@@ -107,6 +105,7 @@ extension CKModelMacro: MemberAttributeMacro {
             return []
         }
         
+        
         if let attribute = variable.attributes.first, attribute.trimmedDescription.contains("@CKReferenceField") == true {
             
             let key: DeclSyntax
@@ -117,10 +116,13 @@ extension CKModelMacro: MemberAttributeMacro {
                 key = "\(literal: identifier)"
             }
             
-            if let type = variable.bindings.first?.typeAnnotation?.type.as(OptionalTypeSyntax.self)?.wrappedType, type.is(ArrayTypeSyntax.self) {
-                return ["@CKReferenceField.Many(\(key))"]
+            if 
+                let type = variable.bindings.first?.typeAnnotation?.type.as(OptionalTypeSyntax.self)?.wrappedType,
+                type.is(ArrayTypeSyntax.self)
+            {
+                return ["@CKReferenceFields.Many(\(key))"]
             } else {
-                return ["@CKReferenceField.One(\(key))"]
+                return ["@CKReferenceFields.One(\(key))"]
             }
             
         }
@@ -139,8 +141,22 @@ extension CKModelMacro: MemberAttributeMacro {
             
         }
         
+        if let attribute = variable.attributes.first, attribute.trimmedDescription.contains("@CKField") == true {
+            
+            let key: DeclSyntax
+            
+            if let argument = attribute.as(AttributeSyntax.self)?.arguments?.trimmedDescription {
+                key = "\(raw: argument)"
+            } else {
+                key = "\(literal: identifier)"
+            }
+            
+            return ["@CKFields.Default(\(key))"]
+            
+        }
+        
         if variable.attributes.isEmpty {
-            return ["@CKField(\(literal: identifier))"]
+            return ["@CKFields.Default(\(literal: identifier))"]
         }
         
         return []

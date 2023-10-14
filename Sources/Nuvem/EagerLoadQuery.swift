@@ -6,17 +6,17 @@ struct EagerLoadQuery<Model> {
     
     let desiredKeys: [CKRecord.FieldKey]?
     
-    init<Value>(field: KeyPath<Model, CKReferenceFieldMany<Value>>) {
+    init<Value>(field: KeyPath<Model, CKReferenceFields.Many<Value>>) {
         self.fieldKeyPath = field
         self.desiredKeys = nil
     }
         
-    init<Value>(field: KeyPath<Model, CKReferenceFieldOne<Value>>) {
+    init<Value>(field: KeyPath<Model, CKReferenceFields.One<Value>>) {
         self.fieldKeyPath = field
         self.desiredKeys = nil
     }
     
-    init<Value>(field: KeyPath<Model, CKReferenceFieldOne<Value>>, desiredFields: PartialKeyPath<Value>...) {
+    init<Value>(field: KeyPath<Model, CKReferenceFields.One<Value>>, desiredFields: PartialKeyPath<Value>...) {
         self.fieldKeyPath = field
         self.desiredKeys = desiredFields.map(\.key)
     }

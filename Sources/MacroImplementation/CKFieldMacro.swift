@@ -2,9 +2,9 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-public enum CKAssetFieldMacro { }
+public enum CKFieldMacro { }
 
-extension CKAssetFieldMacro: AccessorMacro {
+extension CKFieldMacro: AccessorMacro {
     
     public static func expansion(
         of node: AttributeSyntax,

@@ -16,37 +16,37 @@ final class NuvemTests: XCTestCase {
         
         var record: CKRecord!
         
-        @CKField("a")
+        @CKFields.Default("a")
         var a: Int
         
-        @CKField("b")
+        @CKFields.Default("b")
         var b: Double
         
-        @CKField("c")
+        @CKFields.Default("c")
         var c: String
         
-        @CKField("d")
+        @CKFields.Default("d")
         var d: Bool
         
-        @CKField("e")
+        @CKFields.Default("e")
         var e: Date
         
-        @CKField("e2")
+        @CKFields.Default("e2")
         var e2: Date?
         
-        @CKField("f", default: 0)
+        @CKFields.Default("f", default: 0)
         var f: Int
         
-        @CKReferenceFieldOne("r")
+        @CKReferenceFields.One("r")
         var r: M2?
         
-        @CKReferenceFieldOne("rf")
+        @CKReferenceFields.One("rf")
         var rf: M2?
         
         @CKFields.Asset("af")
         var af: Data?
         
-        @CKField("ee")
+        @CKFields.Default("ee")
         var ee: E
         
     }
@@ -55,13 +55,13 @@ final class NuvemTests: XCTestCase {
         
         var record: CKRecord!
         
-        @CKField("f1")
+        @CKFields.Default("f1")
         var f1: Int
         
-        @CKField("f2")
+        @CKFields.Default("f2")
         var f2: Int
         
-        @CKField("f3")
+        @CKFields.Default("f3")
         var f3: Int
     }
     
@@ -75,10 +75,10 @@ final class NuvemTests: XCTestCase {
             
             var record: CKRecord!
             
-            @CKField("name", default: "Mateus")
+            @CKFields.Default("name", default: "Mateus")
             var name: String
             
-            @CKField("age")
+            @CKFields.Default("age")
             var age: Int?
             
         }
@@ -121,7 +121,7 @@ final class NuvemTests: XCTestCase {
     
     func testCKField_1() {
         
-        @CKField("a") var f: Int
+        @CKFields.Default("a") var f: Int
         
         let r = CKRecord(recordType: M.recordType)
         
@@ -135,7 +135,7 @@ final class NuvemTests: XCTestCase {
     
     func testCKField_2() {
         
-        @CKField("a") var f: Int
+        @CKFields.Default("a") var f: Int
         
         let r = CKRecord(recordType: M.recordType)
         
@@ -151,7 +151,7 @@ final class NuvemTests: XCTestCase {
     
     func testCKField_3() {
         
-        @CKField("a") var f: Int
+        @CKFields.Default("a") var f: Int
         
         let r = CKRecord(recordType: M.recordType)
         
@@ -169,7 +169,7 @@ final class NuvemTests: XCTestCase {
     
     func testCKReferenceField() {
         
-        @CKReferenceFieldOne("m2") var m2: M2?
+        @CKReferenceFields.One("m2") var m2: M2?
         
         let r = CKRecord(recordType: M2.recordType)
         

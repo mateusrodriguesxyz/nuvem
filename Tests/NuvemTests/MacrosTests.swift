@@ -70,19 +70,19 @@ final class MacrosTests: XCTestCase {
             expandedSource:
             """
             struct M1 {
-                @CKField("f1")
+                @CKFields.Default("f1")
                
                 var f1: Int
-                @CKReferenceField.One("f2")
+                @CKReferenceFields.One("f2")
                 
                 var f2: M2?
-                @CKReferenceField.One("_f3")
+                @CKReferenceFields.One("_f3")
                 
                 var f3: M2?
-                @CKReferenceField.Many("f4")
+                @CKReferenceFields.Many("f4")
                 
                 var f4: [M2]?
-                @CKReferenceField.Many("_f5")
+                @CKReferenceFields.Many("_f5")
                 
                 var f5: [M2]?
             
