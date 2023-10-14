@@ -12,6 +12,18 @@ extension CKModelMacro: MemberMacro {
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.DeclSyntax] {
         
+        guard let declaration = declaration.as(StructDeclSyntax.self) else { return [] }
+        
+        let recordName: DeclSyntax
+        
+        if let argument = node.arguments?.trimmedDescription {
+            recordName = "\(raw: argument)"
+        } else {
+            recordName = "\(literal: declaration.name.text)"
+        }
+        
+        let recordTypeDecl: DeclSyntax = "public static var recordType: CKRecord.RecordType { \(recordName) }"
+        
         let recordDecl: DeclSyntax = "var record: CKRecord!"
         
         let creationDateDecl: DeclSyntax = """
@@ -30,7 +42,7 @@ extension CKModelMacro: MemberMacro {
         
         initDecls.append(initDecl1)
         
-        let properties = declaration.as(StructDeclSyntax.self)?.memberBlock.members.compactMap( { $0.decl.as(VariableDeclSyntax.self) })
+        let properties = declaration.memberBlock.members.compactMap( { $0.decl.as(VariableDeclSyntax.self) })
             .filter({ $0.bindings.first?.accessorBlock == nil }) ?? []
         
         if !properties.isEmpty {
@@ -48,7 +60,7 @@ extension CKModelMacro: MemberMacro {
             
         }
         
-        return [recordDecl, creationDateDecl, modificationDateDecl] + initDecls
+        return [recordTypeDecl, recordDecl, creationDateDecl, modificationDateDecl] + initDecls
         
         
     }

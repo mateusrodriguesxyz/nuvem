@@ -22,6 +22,10 @@ final class MacrosTests: XCTestCase {
             """
             struct M2 {
             
+                public static var recordType: CKRecord.RecordType {
+                    String(describing: "M2")
+                }
+            
                 var record: CKRecord!
             
                 @CKTimestamp(.creation)
@@ -81,6 +85,10 @@ final class MacrosTests: XCTestCase {
                 @CKReferenceField.Many("_f5")
                 
                 var f5: [M2]?
+            
+                public static var recordType: CKRecord.RecordType {
+                    String(describing: "M1")
+                }
             
                 var record: CKRecord!
             
