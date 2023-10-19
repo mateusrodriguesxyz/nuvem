@@ -70,6 +70,17 @@ public struct CKLogicFilter<Model: CKModel>: CKFilter {
     
 }
 
+public struct CKContainsFilter<Model: CKModel>: CKFilter {
+    
+    let key: String?
+    let value: any CVarArg
+    
+    public var predicate: NSPredicate {
+        return NSPredicate(format: "\(key ?? "self") contains %@", value)
+    }
+    
+}
+
 public func == <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isEqualTo, rhs)
 }
@@ -191,6 +202,35 @@ extension CKFilter {
     
     public static func isDate<Model: CKModel, Value: CKFilterableValue>(_ field: KeyPath<Model, CKField<Value>>, in range: ClosedRange<Date>) -> Self where Value.AttributeValue == Date, Self == CKLogicFilter<Model> {
         return field >= range.lowerBound && field <= range.upperBound
+    }
+    
+}
+
+
+extension CKFilter {
+    
+    public static func contains<Model: CKModel>(token: String) -> Self where Self == CKContainsFilter<Model> {
+        return CKContainsFilter(key: nil, value: token.attributeValue)
+    }
+    
+    public static func contains<Model: CKModel, Value: CKFilterableValue>(_ value: Value.AttributeValue, in field: KeyPath<Model, CKField<[Value]>>) -> Self where Self == CKContainsFilter<Model> {
+        return CKContainsFilter(key: field.key, value: value.attributeValue)
+    }
+    
+    public static func contains<Model: CKModel, Value: CKModel>(_ value: Value, in field: KeyPath<Model, CKReferenceListField<Value>>) -> Self where Self == CKContainsFilter<Model> {
+        return CKContainsFilter(key: field.key, value: CKRecord.Reference(recordID: .init(recordName: value.id), action: .none))
+    }
+    
+    public static func contains<Model: CKModel, Value: CKModel>(_ id: Value.ID, in field: KeyPath<Model, CKReferenceListField<Value>>) -> Self where Self == CKContainsFilter<Model> {
+        return CKContainsFilter(key: field.key, value: CKRecord.Reference(recordID: .init(recordName: id), action: .none))
+    }
+    
+}
+
+extension CKFilter {
+    
+    public static func begins<Model: CKModel, Value: CKFilterableValue>(with value: String, in field: KeyPath<Model, CKField<Value>>) -> Self where Value.AttributeValue == String, Self == CKPredicateFilter<Model> {
+        return CKPredicateFilter(predicate: NSPredicate(format: "\(field.key) beginswith %@", value))
     }
     
 }
