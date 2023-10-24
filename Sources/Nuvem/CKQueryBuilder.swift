@@ -263,6 +263,18 @@ public final class CKQueryBuilder<Model> where Model: CKModel {
             return Model(record: record)
         }
         
+        for query in eagerLoadQueries {
+            
+            if let field = model?[keyPath: query.fieldKeyPath] as? (any CKReferenceFieldProtocol) {
+                try await query.run(for: [field], on: database)
+            }
+            
+            if let field = model?[keyPath: query.fieldKeyPath] as? (any CKReferenceListFieldProtocol) {
+                try await query.run(for: [field], on: database)
+            }
+            
+        }
+        
         return model
     }
     
