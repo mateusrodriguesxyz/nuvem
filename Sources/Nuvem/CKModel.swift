@@ -76,6 +76,16 @@ extension CKModel {
         return model
     }
     
+    public static func find<Value>(id: CKRecord.ID, with field: KeyPath<Self, CKReferenceListField<Value>>, on database: CKDatabase) async throws -> Self {
+        let query = EagerLoadQuery(field: field)
+        let record = try await database.record(for: id)
+        let model = Self(record: record)
+        if let field = model[keyPath: query.fieldKeyPath] as? (any CKReferenceListFieldProtocol) {
+            try await query.run(for: [field], on: database)
+        }
+        return model
+    }
+    
     public static func query(on database: CKDatabase) -> CKQueryBuilder<Self> {
         return CKQueryBuilder(database: database)
     }
