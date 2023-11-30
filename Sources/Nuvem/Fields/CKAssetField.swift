@@ -25,9 +25,10 @@ import CloudKit
             }
             else if
                 let asset = storage.record?[key] as? CKAsset,
-                let url = asset.fileURL,
-                let data = FileManager.default.contents(atPath: url.path)
+                let fileURL = asset.fileURL,
+                let data = FileManager.default.contents(atPath: fileURL.path)
             {
+                clearOldFiles(fileURL)
                 return Value.get(data)!
             }
             else if let defaultValue {
@@ -72,6 +73,25 @@ import CloudKit
         self.key = key
         self.defaultValue = .some(nil)
         self.storage = .init(key: key)
+    }
+    
+    private func clearOldFiles(_ fileURL: URL) {
+        DispatchQueue.global().async {
+            let cloudKitCachesDirectory = fileURL.deletingLastPathComponent().absoluteString.replacingOccurrences(of: "file://", with: "")
+            do {
+                let files = try FileManager.default.contentsOfDirectory(atPath: cloudKitCachesDirectory)
+                let oldFiles = files.filter {
+                    let newFile = fileURL.lastPathComponent
+                    let id = newFile.drop(while: { $0 != "." }).dropFirst()
+                    return $0.contains(id) && $0 != newFile
+                }
+                try oldFiles.forEach {
+                    try FileManager.default.removeItem(atPath: cloudKitCachesDirectory + $0)
+                }
+            } catch {
+                print(error)
+            }
+        }
     }
     
 }
