@@ -2,6 +2,12 @@ import CloudKit
 
 @propertyWrapper public struct CKAssetField<Value: CKAssetFieldValue>: CKFieldProtocol, _CKFieldProtocol {
     
+    enum Source {
+        case storage
+        case record
+        case field
+    }
+    
     var hasBeenSet: Bool = false
     
     public var record: CKRecord? { storage.record }
@@ -17,11 +23,20 @@ import CloudKit
     var value: Value?
 
     var defaultValue: Value?
+    
+    var _wrappedValue: (Value, Source) {
+        fatalError()
+    }
 
     public var wrappedValue: Value {
         get {
             if let value {
+                print("value from local")
                 return value
+            }
+            else if storage.loadedValue != nil, let loadedValue = storage.loadedValue as? Value {
+                print("value from storage")
+                return loadedValue
             }
             else if
                 let asset = storage.record?[key] as? CKAsset,
@@ -29,9 +44,13 @@ import CloudKit
                 let data = FileManager.default.contents(atPath: fileURL.path)
             {
                 clearOldFiles(fileURL)
-                return Value.get(data)!
+                let value = Value.get(data)!
+                storage.loadedValue = value
+                print("value from record")
+                return value
             }
             else if let defaultValue {
+                print("value from default")
                 return defaultValue
             }
             else {
