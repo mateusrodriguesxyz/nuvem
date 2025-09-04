@@ -67,7 +67,8 @@ import Combine
         self.storage = .init(key: key)
     }
     
-    func load(on database: CKDatabase) async throws -> Value? {
+    @discardableResult
+    public func load(on database: CKDatabase) async throws -> Value? {
         guard let record = storage.record else { return nil }
         let id = record.recordID
         guard let result = try await database.records(for: [id], desiredKeys: [key])[id] else {

@@ -94,10 +94,22 @@ import CloudKit
         self.storage = .init(key: key)
     }
     
+    @discardableResult
+    public func load(on database: CKDatabase) async throws -> Value? {
+        guard let record = storage.record else { return nil }
+        let id = record.recordID
+        guard let result = try await database.records(for: [id], desiredKeys: [key])[id] else {
+            return nil
+        }
+        record[key] = try result.get()[key]
+        return wrappedValue
+    }
+    
     private func clearOldFiles(_ fileURL: URL) {
         DispatchQueue.global().async {
             let cloudKitCachesDirectory = fileURL.deletingLastPathComponent().absoluteString.replacingOccurrences(of: "file://", with: "")
             do {
+                guard FileManager.default.fileExists(atPath: cloudKitCachesDirectory) else { return }
                 let files = try FileManager.default.contentsOfDirectory(atPath: cloudKitCachesDirectory)
                 let oldFiles = files.filter {
                     let newFile = fileURL.lastPathComponent
