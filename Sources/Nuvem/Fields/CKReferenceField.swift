@@ -44,7 +44,19 @@ import CloudKit
     public func load(on database: CKDatabase) async throws -> Value? {
         guard let reference else { return nil }
         let record = try await database.record(for: reference.recordID)
+        self.storage.referenceRecords = [record]
         return Value.init(record: record)
     }
     
+}
+
+extension CKReferenceField {
+    @discardableResult
+    public func load(fields: Fields<Value> = .all, on database: CKDatabase) async throws -> Value? {
+        guard let reference else { return nil }
+        guard let result = try await database.records(for: [reference.recordID], desiredKeys: fields.desiredKeys).first?.value else { return nil }
+        let record = try result.get()
+        self.storage.referenceRecords = [record]
+        return Value.init(record: record)
+    }
 }

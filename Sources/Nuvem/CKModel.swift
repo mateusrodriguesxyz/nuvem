@@ -1,10 +1,21 @@
 import CloudKit
 import SwiftUI
 
-public protocol CKModel: Identifiable where ID == String {
+@attached(member, names: named(recordType), named(record), named(creationDate), named(modificationDate), named(init))
+@attached(memberAttribute)
+@attached(extension, conformances: CKModel)
+public macro CKModel(_ name: String? = nil) = #externalMacro(module: "NuvemMacros", type: "CKModelMacro")
+
+public protocol CKModel: CustomDebugStringConvertible, Identifiable where ID == String {
     static var recordType: CKRecord.RecordType { get }
     var record: CKRecord! { get set }
     init()
+}
+
+extension CKModel {
+    public var debugDescription: String {
+        "\(Self.self)"
+    }
 }
 
 extension CKModel {
@@ -17,7 +28,7 @@ extension CKModel {
     
     public var creationDate: Date? { record.creationDate }
     
-    init(record: CKRecord) {
+    public init(record: CKRecord) {
         self.init()
         self.record = record
         bindRecordToFields()
@@ -54,7 +65,6 @@ extension CKModel {
     func updateRecordWithFields() {
         for field in allFields {
             field.storage.record = self.record
-//            assert(field.storage.record != nil)
             field.updateRecord()
         }
     }
@@ -76,8 +86,21 @@ extension CKModel {
         return model
     }
     
+    public static func find<each T: CKFieldProtocol>(id: CKRecord.ID, fields: repeat KeyPath<Self, each T>?, on database: CKDatabase) async throws -> Self {
+        let desiredKeysBuilder = DesiredKeysBuilder<Self>()
+        desiredKeysBuilder.add()
+        for field in repeat each fields {
+            if let field {
+                desiredKeysBuilder.add(field)
+            }
+        }
+        let record = try await database.records(for: [id], desiredKeys: desiredKeysBuilder.build())[id]!.get()
+        let model = Self(record: record)
+        return model
+    }
+    
     public static func find<Value>(id: CKRecord.ID, with field: KeyPath<Self, CKReferenceListField<Value>>, on database: CKDatabase) async throws -> Self {
-        let query = EagerLoadQuery(field: field)
+        let query = ReferenceQuery(field: field)
         let record = try await database.record(for: id)
         let model = Self(record: record)
         if let field = model[keyPath: query.fieldKeyPath] as? (any CKReferenceListFieldProtocol) {
@@ -93,6 +116,7 @@ extension CKModel {
     public mutating func save(on database: CKDatabase) async throws {
         _save()
         self.record = try await database.save(record)
+//        NotificationCenter.default.post(name: Notification.Name("CKQueryRemoteNotification"), object: nil)
     }
     
     public func delete(on database: CKDatabase) async throws {
@@ -101,12 +125,38 @@ extension CKModel {
     
 }
 
-extension Binding where Value: CKModel {
+extension [CKModel] {
+    
+    public mutating func save(on database: CKDatabase) async throws {
+        for index in self.indices {
+            self[index]._save()
+        }
+        let (results, _) = try await database.modifyRecords(saving: self.compactMap(\.record), deleting: [])
+        for index in self.indices {
+            let model = self[index]
+            self[index].record = try results[model.record.recordID]?.get()
+        }
+    }
+    
+    public mutating func delete(on database: CKDatabase) async throws {
+        for index in self.indices {
+            self[index]._save()
+        }
+        let _ = try await database.modifyRecords(saving: [], deleting: self.compactMap(\.record?.recordID))
+    }
+    
+}
 
-    // MARK: TODO - 🤔
-    @MainActor
+extension Binding where Value: CKModel {
     public func save(on database: CKDatabase) async throws {
         try await wrappedValue.save(on: database)
     }
-    
+}
+
+extension Binding where Value: CKModel {
+    public func load(_ field: KeyPath<Value, some CKFieldProtocol>, on database: CKDatabase) async throws {
+        let value = self.wrappedValue
+        _ = try await value[keyPath: field].load(on: database)
+        self.wrappedValue = value
+    }
 }

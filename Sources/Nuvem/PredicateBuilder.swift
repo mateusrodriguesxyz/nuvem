@@ -20,4 +20,8 @@ final class PredicateBuilder<Model: CKModel> {
         self.filters.append(filter)
     }
     
+    func build() -> NSPredicate {
+        self.predicate
+    }
+    
 }

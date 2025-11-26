@@ -5,11 +5,9 @@ import CloudKit
 final class NuvemTests: XCTestCase {
 
     enum E: String, CKFieldValue {
-                
         case one
         case two
         case three
-        
     }
     
     struct M: CKModel {
@@ -412,19 +410,19 @@ final class NuvemTests: XCTestCase {
         
         XCTAssertEqual(p9, NSCompoundPredicate(orPredicateWithSubpredicates: [p7, p3]))
         
-        let f10: CKLogicFilter<M> = .isDateInToday(\.$e)
-                
-        let f11: CKLogicFilter<M> = .isDateInThisMonth(\.$e)
-        
-        let f12: CKLogicFilter<M> = .isDateInThisYear(\.$e)
-        
-        let f13: CKLogicFilter<M> = .isDate(\.$e, inSameHourAs: .now)
-        
-        let f14: CKLogicFilter<M> = .isDate(\.$e, inSameMinuteAs: .now)
-        
-        let f15: CKPredicateFilter<M> = .predicate(format: "a == %@", NSNumber(value: 1))
-        
-        let f16: some CKFilter<M> = \.$ee == .one
+//        let f10: CKLogicFilter<M> = .isDateInToday(\.$e)
+//                
+//        let f11: CKLogicFilter<M> = .isDateInThisMonth(\.$e)
+//        
+//        let f12: CKLogicFilter<M> = .isDateInThisYear(\.$e)
+//        
+//        let f13: CKLogicFilter<M> = .isDate(\.$e, inSameHourAs: .now)
+//        
+//        let f14: CKLogicFilter<M> = .isDate(\.$e, inSameMinuteAs: .now)
+//        
+//        let f15: CKPredicateFilter<M> = .predicate(format: "a == %@", NSNumber(value: 1))
+//        
+//        let f16: some CKFilter<M> = \.$ee == .one
         
         let builder = PredicateBuilder<M>()
         
@@ -468,12 +466,31 @@ final class NuvemTests: XCTestCase {
     func testCKQueryBuilder() {
         
         let query = CKQueryBuilder<M>()
-        
-        _ = query.filter(\.$a == 1)
-        _ = query.filter(\.$c == "hello")
+            .filter(\.$a == 1)
+            .filter(\.$c == "hello")
         
         XCTAssertEqual(query.predicateBuilder.predicate, NSPredicate(format: "a == %@ && c == %@", NSNumber(value: 1), "hello"))
                 
+    }
+    
+    func testCKQueryBuilderIncludeFields() throws {
+        
+        let query = CKQueryBuilder<M2>()
+            .field(\.$f1, \.$f2)
+
+        XCTAssertEqual(query.desiredKeysBuilder.desiredKeys?.sorted(), ["f1", "f2"])
+        
+        
+    }
+    
+    func testCKQueryBuilderExcludeFields() throws {
+        
+        let query = CKQueryBuilder<M2>()
+            .field(exclude: \.$f1)
+
+        XCTAssertEqual(query.desiredKeysBuilder.desiredKeys?.sorted(), ["f2", "f3"])
+        
+        
     }
     
 }

@@ -2,17 +2,24 @@ import CloudKit
 
 final class DesiredKeysBuilder<Model: CKModel> {
     
-    var fields: [PartialKeyPath<Model>] = []
+    var fields: [PartialKeyPath<Model>]?
+    var _fields: Fields<Model>?
     
-    var desiredKeys: [CKRecord.FieldKey]? {
-        guard !fields.isEmpty else {
+    func add(_ fields: PartialKeyPath<Model>...) {
+        if self.fields == nil {
+            self.fields = []
+        }
+        self.fields?.append(contentsOf: fields)
+    }
+    
+    func build() -> [CKRecord.FieldKey]? {
+        if let _fields {
+            return _fields.desiredKeys
+        }
+        guard let fields else {
             return nil
         }
         return fields.map(\.key)
     }
-    
-    func add(_ fields: PartialKeyPath<Model>...) {
-        self.fields.append(contentsOf: fields)
-    }
-    
+     
 }

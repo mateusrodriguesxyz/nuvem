@@ -81,6 +81,23 @@ public struct CKContainsFilter<Model: CKModel>: CKFilter {
     
 }
 
+public struct CKBeginsWithFilter<Model: CKModel>: CKFilter {
+    
+    let key: String
+    let value: String
+    
+    public var predicate: NSPredicate {
+        return NSPredicate(format: "\(key) BEGINSWITH %@", value)
+    }
+    
+}
+
+extension KeyPath {
+    public func begins(with prefix: String) -> CKBeginsWithFilter<Root> where Value == CKField<String>, Root: CKModel {
+        return CKBeginsWithFilter(key: self.key, value: prefix)
+    }
+}
+
 public func == <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value.AttributeValue) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isEqualTo, rhs)
 }
@@ -209,8 +226,8 @@ extension CKFilter {
 
 extension CKFilter {
     
-    public static func contains<Model: CKModel>(token: String) -> Self where Self == CKContainsFilter<Model> {
-        return CKContainsFilter(key: nil, value: token.attributeValue)
+    public static func contains<Model: CKModel>(_ tokens: String...) -> Self where Self == CKContainsFilter<Model> {
+        return CKContainsFilter(key: nil, value: tokens.joined(separator: " ").attributeValue)
     }
     
     public static func contains<Model: CKModel, Value: CKFilterableValue>(_ value: Value.AttributeValue, in field: KeyPath<Model, CKField<[Value]>>) -> Self where Self == CKContainsFilter<Model> {
@@ -228,11 +245,9 @@ extension CKFilter {
 }
 
 extension CKFilter {
-    
     public static func begins<Model: CKModel, Value: CKFilterableValue>(with value: String, in field: KeyPath<Model, CKField<Value>>) -> Self where Value.AttributeValue == String, Self == CKPredicateFilter<Model> {
         return CKPredicateFilter(predicate: NSPredicate(format: "\(field.key) beginswith %@", value))
     }
-    
 }
 
 

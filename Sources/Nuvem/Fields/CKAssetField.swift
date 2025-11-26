@@ -14,7 +14,7 @@ import CloudKit
     
     public var recordValue: CKRecordValue?
     
-    public var asset: CKAsset? { recordValue as? CKAsset }
+    public var asset: CKAsset? { recordValue as? CKAsset ?? storage.record?[key] as? CKAsset }
     
     var storage: FieldStorage
     
@@ -31,11 +31,11 @@ import CloudKit
     public var wrappedValue: Value {
         get {
             if let value {
-                print("value from local")
+//                print("value from local")
                 return value
             }
             else if storage.loadedValue != nil, let loadedValue = storage.loadedValue as? Value {
-                print("value from storage")
+//                print("value from storage")
                 return loadedValue
             }
             else if
@@ -46,11 +46,11 @@ import CloudKit
                 clearOldFiles(fileURL)
                 let value = Value.get(data)!
                 storage.loadedValue = value
-                print("value from record")
+//                print("value from record: \(fileURL)")
                 return value
             }
             else if let defaultValue {
-                print("value from default")
+//                print("value from default")
                 return defaultValue
             }
             else {
@@ -60,18 +60,17 @@ import CloudKit
         set {
             hasBeenSet = true
             value = newValue
-            if let data = Value.set(newValue) {
-                let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-                do {
-                    try data.write(to: url)
-                    recordValue = CKAsset(fileURL: url)
-                } catch {
-                    print(error)
-                    fatalError()
-                }
-            } else {
-                recordValue = nil
-            }
+//            if let data = Value.set(newValue) {
+//                let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+//                do {
+//                    try data.write(to: url)
+//                    self.recordValue = CKAsset(fileURL: url)
+//                } catch {
+//                    print(error)
+//                }
+//            } else {
+//                recordValue = nil
+//            }
         }
     }
     
@@ -116,13 +115,36 @@ import CloudKit
                     let id = newFile.drop(while: { $0 != "." }).dropFirst()
                     return $0.contains(id) && $0 != newFile
                 }
-                try oldFiles.forEach {
-                    try FileManager.default.removeItem(atPath: cloudKitCachesDirectory + $0)
-                }
+                print("OLD FILES: \(oldFiles.count)")
+//                try oldFiles.forEach {
+//                    try FileManager.default.removeItem(atPath: cloudKitCachesDirectory + $0)
+//                }
             } catch {
                 print(error)
             }
         }
     }
     
+    public func _update(_ value: Value) {
+        self.storage.loadedValue = value
+    }
+    
+}
+
+extension CKAssetField {
+    func updateRecord() {
+        guard hasBeenSet else { return }
+        if let data = Value.set(value) {
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            do {
+                try data.write(to: url)
+                let recordValue = CKAsset(fileURL: url)
+                storage.update(with: recordValue)
+            } catch {
+                print(error)
+            }
+        } else {
+            storage.update(with: nil)
+        }
+    }
 }

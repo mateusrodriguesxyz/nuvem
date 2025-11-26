@@ -1,9 +1,7 @@
 import CloudKit
 
 public protocol CKFilterableValue {
-    
     associatedtype AttributeValue: AttributeValueProtocol = Self
-    
 }
 
 public protocol AttributeValueProtocol {
@@ -36,12 +34,10 @@ extension Bool: CKFilterableValue, AttributeValueProtocol {
 
 extension Date: CKFilterableValue, AttributeValueProtocol {
     public var attributeValue: CVarArg {
-        self as NSDate
+        NSDate(timeIntervalSince1970: self.timeIntervalSince1970)
     }
 }
 
 extension Optional: CKFilterableValue where Wrapped: CKFilterableValue & AttributeValueProtocol {
-    
     public typealias AttributeValue = Wrapped
-    
 }

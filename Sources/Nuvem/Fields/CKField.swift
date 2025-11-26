@@ -3,7 +3,7 @@ import Combine
 
 @propertyWrapper public struct CKField<Value: CKFieldValue>: CKFieldProtocol, _CKFieldProtocol {
     
-    var hasBeenSet: Bool = false
+    private(set) var hasBeenSet: Bool = false
     
     public var record: CKRecord? { storage.record }
     
@@ -34,7 +34,6 @@ import Combine
                 return defaultValue
             }
             else {
-                print("key = \(key)")
                 fatalError("wrappedValue must be set before access because it has no default value")
             }
         }
@@ -58,6 +57,12 @@ import Combine
     public init(_ key: String) {
         self.key = key
         self.defaultValue = nil
+        self.storage = .init(key: key)
+    }
+    
+    public init(wrappedValue: Value, _ key: String) {
+        self.key = key
+        self.defaultValue = wrappedValue
         self.storage = .init(key: key)
     }
     

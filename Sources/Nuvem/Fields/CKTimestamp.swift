@@ -1,6 +1,8 @@
 import CloudKit
 
 @propertyWrapper public struct CKTimestamp: CKFieldProtocol, _CKFieldProtocol {
+ 
+    public typealias Value = Date?
     
     var hasBeenSet: Bool = false
     
@@ -36,5 +38,10 @@ import CloudKit
         self.event = event
         self.storage = .init(key: nil)
     }
+    
+    public func load(on database: CKDatabase) async throws -> Date? {
+        self.wrappedValue
+    }
+
     
 }
