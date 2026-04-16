@@ -1,11 +1,12 @@
 import Foundation
 import Observation
 import CloudKit
+import SwiftUI
 
 @available(macOS 14.0, iOS 17.0, watchOS 10.0, tvOS 17.0, *)
 @Observable
 @dynamicMemberLookup
-public final class CKObservable<M: CKModel>: Identifiable {
+public final class CKObservable<M: CKModel>: Identifiable, CKObservableProtocol {
     public var model: M
     public var id: String { model.id }
     public init(_ model: M) {
@@ -16,6 +17,11 @@ public final class CKObservable<M: CKModel>: Identifiable {
     }
 }
 
+public protocol CKObservableProtocol: AnyObject {
+    associatedtype M: CKModel
+    var model: M { get set }
+}
+ 
 extension CKModel {
     @available(macOS 14.0, iOS 17.0, watchOS 10.0, tvOS 17.0, *)
     public var observable: CKObservable<Self> {
@@ -67,6 +73,13 @@ extension CKObservable {
     
     public func delete(on database: CKDatabase) async throws {
         try await model.delete(on: database)
+    }
+}
+
+@available(iOS 17.0, *)
+extension Bindable where Value: CKObservableProtocol {
+    public subscript<T>(dynamicMember keyPath: WritableKeyPath<Value.M, T>) -> Binding<T> {
+        projectedValue.model[dynamicMember: keyPath]
     }
 }
 
