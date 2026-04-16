@@ -16,6 +16,8 @@ extension CKModelMacro: MemberMacro {
         
         let recordName: DeclSyntax
         
+        let observableTypealiasDecl: DeclSyntax = "typealias Observable = CKObservable<\(structDecl.name.trimmed)>"
+        
         if let argument = node.arguments?.trimmedDescription {
             recordName = "\(raw: argument)"
         } else {
@@ -58,12 +60,10 @@ extension CKModelMacro: MemberMacro {
             initDecls.append(memberwiseInitDecl)
             
         }
-        
-        return [creationDateDecl, modificationDateDecl, recordTypeDecl, recordDecl] + initDecls
-        
+                
+        return [observableTypealiasDecl, creationDateDecl, modificationDateDecl, recordTypeDecl, recordDecl] + initDecls
         
     }
-    
     
 }
 

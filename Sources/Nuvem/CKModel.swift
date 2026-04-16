@@ -1,7 +1,7 @@
 import CloudKit
 import SwiftUI
 
-@attached(member, names: named(recordType), named(record), named(creationDate), named(modificationDate), named(init))
+@attached(member, names: named(recordType), named(record), named(creationDate), named(modificationDate), named(init), named(Observable))
 @attached(memberAttribute)
 @attached(extension, conformances: CKModel)
 public macro CKModel(_ name: String? = nil) = #externalMacro(module: "NuvemMacros", type: "CKModelMacro")
