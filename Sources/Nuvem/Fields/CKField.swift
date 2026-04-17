@@ -44,7 +44,14 @@ import Combine
         }
     }
     
-    public var projectedValue: CKField<Value> { self }
+    public var projectedValue: CKField<Value> {
+        get {
+            self
+        }
+        set {
+            self = newValue
+        }
+    }
     
     public lazy var publisher = PassthroughSubject<Value, Never>()
     

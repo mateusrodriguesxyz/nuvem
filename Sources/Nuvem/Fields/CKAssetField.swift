@@ -74,7 +74,16 @@ import CloudKit
         }
     }
     
-    public var projectedValue: CKAssetField<Value> { self }
+//    public var projectedValue: CKAssetField<Value> { self }
+    
+    public var projectedValue: CKAssetField<Value> {
+        get {
+            self
+        }
+        set {
+            self = newValue
+        }
+    }
     
     public init(_ key: String, default defaultValue: Value) {
         self.key = key

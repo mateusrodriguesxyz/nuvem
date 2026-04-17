@@ -151,6 +151,27 @@ extension Binding where Value: CKModel {
     public func save(on database: CKDatabase) async throws {
         try await wrappedValue.save(on: database)
     }
+//    @_disfavoredOverload
+//    public subscript<T>(dynamicMember keyPath: WritableKeyPath<Value, T>) -> Binding<T> {
+//       Binding<T>(
+//            get: {
+//                wrappedValue[keyPath: keyPath]
+//            },
+//            set: { newValue in
+//                var value = wrappedValue
+//                value[keyPath: keyPath] = newValue
+//                wrappedValue = value
+//            },
+//       )
+//    }
+}
+
+extension Binding where Value: CKFieldProtocol {
+    public func load(on database: CKDatabase) async throws {
+        var value = self.wrappedValue
+        try await value.load(on: database)
+        self.wrappedValue = value
+    }
 }
 
 extension Binding where Value: CKModel {

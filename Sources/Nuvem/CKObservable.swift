@@ -81,6 +81,9 @@ extension Bindable where Value: CKObservableProtocol {
     public subscript<T>(dynamicMember keyPath: WritableKeyPath<Value.M, T>) -> Binding<T> {
         projectedValue.model[dynamicMember: keyPath]
     }
+    public subscript<T>(dynamicMember keyPath: WritableKeyPath<Value.M, T?>) -> Binding<T>? {
+        Binding(projectedValue.model[dynamicMember: keyPath])
+    }
 }
 
 extension URL {

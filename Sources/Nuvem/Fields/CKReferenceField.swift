@@ -33,7 +33,14 @@ import CloudKit
         }
     }
     
-    public var projectedValue: CKReferenceField<Value> { self }
+    public var projectedValue: CKReferenceField<Value> {
+        get {
+            self
+        }
+        set {
+            self = newValue
+        }
+    }
     
     public init(_ key: String) {
         self.key = key
