@@ -5,10 +5,11 @@ import SwiftSyntaxMacros
 public enum CKModelMacro { }
 
 extension CKModelMacro: MemberMacro {
-   
+    
     public static func expansion(
         of node: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
+        conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         
@@ -61,7 +62,13 @@ extension CKModelMacro: MemberMacro {
             
         }
                 
-        return [observableTypealiasDecl, creationDateDecl, modificationDateDecl, recordTypeDecl, recordDecl] + initDecls
+        return [
+            observableTypealiasDecl,
+            creationDateDecl,
+            modificationDateDecl,
+            recordTypeDecl,
+            recordDecl
+        ] + initDecls
         
     }
     

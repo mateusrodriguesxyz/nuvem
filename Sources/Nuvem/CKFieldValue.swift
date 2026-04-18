@@ -52,7 +52,7 @@ extension Optional: CKFieldValue where Wrapped: CKFieldValue {
     }
 
     public static func set(_ value: Self?) -> CKRecordValue? {
-        return Wrapped.set(value!)
+        return Wrapped.set(value?.flatMap(\.self))
     }
 
 }

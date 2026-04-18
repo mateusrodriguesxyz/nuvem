@@ -238,17 +238,19 @@ extension CKQueryBuilder {
                 return nil
             }
             guard let database = builder.database else { return nil }
-            let (query, _) = builder.build()
+            let (query, desiredKeys) = builder.build()
             var matchResults: [(CKRecord.ID, Result<CKRecord, Error>)]
             if isInitialFetch {
                 (matchResults, queryCursor) = try await database.records(
                     matching: query,
+                    desiredKeys: desiredKeys,
                     resultsLimit: resultsLimit ?? CKQueryOperation.maximumResults
                 )
                 isInitialFetch = false
             } else {
                 (matchResults, queryCursor) = try await database.records(
                     continuingMatchFrom: queryCursor!,
+                    desiredKeys: desiredKeys,
                     resultsLimit: resultsLimit ?? CKQueryOperation.maximumResults
                 )
             }

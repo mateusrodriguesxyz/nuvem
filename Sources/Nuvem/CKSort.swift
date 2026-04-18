@@ -11,7 +11,7 @@ public struct CKSort<Model: CKModel> {
     let order: Order
     
     public var descriptor: NSSortDescriptor {
-        NSSortDescriptor(key: key, ascending: order == .ascending ? true : false)
+        NSSortDescriptor(key: key, ascending: order == .ascending)
     }
     
 }

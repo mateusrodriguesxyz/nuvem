@@ -1,6 +1,5 @@
 import SwiftUI
 import CloudKit
-import Nuvem
 import Combine
 
 @available(iOS 16.0, *)

@@ -6,7 +6,7 @@ import SwiftUI
 @available(macOS 14.0, iOS 17.0, watchOS 10.0, tvOS 17.0, *)
 @Observable
 @dynamicMemberLookup
-public final class CKObservable<M: CKModel>: Identifiable, CKObservableProtocol {
+public final class CKObservable<M: CKModel>: Identifiable {
     public var model: M
     public var id: String { model.id }
     public init(_ model: M) {
@@ -17,11 +17,6 @@ public final class CKObservable<M: CKModel>: Identifiable, CKObservableProtocol 
     }
 }
 
-public protocol CKObservableProtocol: AnyObject {
-    associatedtype M: CKModel
-    var model: M { get set }
-}
- 
 extension CKModel {
     @available(macOS 14.0, iOS 17.0, watchOS 10.0, tvOS 17.0, *)
     public var observable: CKObservable<Self> {
@@ -68,7 +63,9 @@ extension CKObservable {
         self.model = model
     }
     public func save(on database: CKDatabase) async throws {
+        var model = self.model
         try await model.save(on: database)
+        self.model = model
     }
     
     public func delete(on database: CKDatabase) async throws {
@@ -76,12 +73,12 @@ extension CKObservable {
     }
 }
 
-@available(iOS 17.0, *)
-extension Bindable where Value: CKObservableProtocol {
-    public subscript<T>(dynamicMember keyPath: WritableKeyPath<Value.M, T>) -> Binding<T> {
+@available(iOS 17.0, macOS 14.0, *)
+extension Bindable  {
+    public subscript<Model, T>(dynamicMember keyPath: WritableKeyPath<Model, T>) -> Binding<T> where Value == CKObservable<Model> {
         projectedValue.model[dynamicMember: keyPath]
     }
-    public subscript<T>(dynamicMember keyPath: WritableKeyPath<Value.M, T?>) -> Binding<T>? {
+    public subscript<Model, T>(dynamicMember keyPath: WritableKeyPath<Model, T?>) -> Binding<T>? where Value == CKObservable<Model> {
         Binding(projectedValue.model[dynamicMember: keyPath])
     }
 }

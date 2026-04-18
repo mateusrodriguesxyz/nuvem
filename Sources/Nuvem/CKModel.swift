@@ -168,8 +168,8 @@ extension Binding where Value: CKModel {
 
 extension Binding where Value: CKFieldProtocol {
     public func load(on database: CKDatabase) async throws {
-        var value = self.wrappedValue
-        try await value.load(on: database)
+        let value = self.wrappedValue
+        _ = try await value.load(on: database)
         self.wrappedValue = value
     }
 }
