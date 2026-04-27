@@ -55,6 +55,7 @@ extension CKModelMacro: MemberMacro {
             let  memberwiseInitDecl: DeclSyntax = """
         init(\(raw: zip(identifiers, types).map({ "\($0.0.trimmedDescription)\($0.1.trimmedDescription)" }).joined(separator: ", "))) {
         \(raw: identifiers.map({ "self.\($0.trimmedDescription) = \($0.trimmedDescription)" }).joined(separator: "\n"))
+            self.record = CKRecord(recordType: \(recordName))
         }
         """
             
