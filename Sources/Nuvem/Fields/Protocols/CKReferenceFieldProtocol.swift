@@ -10,6 +10,10 @@ protocol CKReferenceListFieldProtocol: CKFieldProtocol {
 //    var value: Value? { get set }
 }
 
+protocol CKAssetListFieldProtocol: CKFieldProtocol {
+    var assets: [CKAsset] { get }
+}
+
 //extension CKReferenceFieldProtocol {
 //    
 //    func initialiseValue(_ record: CKRecord) {
