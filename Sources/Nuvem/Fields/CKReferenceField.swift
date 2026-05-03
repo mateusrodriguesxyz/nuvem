@@ -4,11 +4,13 @@ import CloudKit
     
     var hasBeenSet: Bool = false
     
+    public var id: String? { reference?.recordID.recordName }
+    
     public var record: CKRecord? { storage.record }
     
     public var recordValue: CKRecordValue?
     
-    public var reference: CKRecord.Reference? { recordValue as? CKRecord.Reference ?? record?[key] as? CKRecord.Reference  }
+    public var reference: CKRecord.Reference? { recordValue as? CKRecord.Reference ?? record?[key] as? CKRecord.Reference }
     
     var storage: FieldStorage
     
@@ -66,4 +68,13 @@ extension CKReferenceField {
         self.storage.referenceRecords = [record]
         return Value.init(record: record)
     }
+}
+
+public func == <Model: CKModel>(lhs: CKReferenceField<Model>, rhs: Model) -> Bool {
+    lhs.id == rhs.id
+}
+
+@available(iOS 17.0, *)
+public func == <Model: CKModel>(lhs: CKReferenceField<Model>, rhs: CKObservable<Model>) -> Bool {
+    lhs.id == rhs.model.id
 }

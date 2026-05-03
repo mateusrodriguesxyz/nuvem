@@ -123,7 +123,6 @@ public func <= <Model: CKModel, Value: CKFilterableValue>(lhs: KeyPath<Model, CK
 }
 
 
-
 public func == <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceField<Value>>, rhs: Value) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isEqualTo, rhs)
 }
@@ -140,6 +139,15 @@ public func != <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceF
     return CKComparisonFilter(lhs, .isNotEqualTo, rhs)
 }
 
+@available(iOS 17.0, *)
+public func == <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceField<Value>>, rhs: CKObservable<Value>) -> CKComparisonFilter<Model> {
+    return CKComparisonFilter(lhs, .isEqualTo, rhs.model)
+}
+
+@available(iOS 17.0, *)
+public func != <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceField<Value>>, rhs: CKObservable<Value>) -> CKComparisonFilter<Model> {
+    return CKComparisonFilter(lhs, .isNotEqualTo, rhs.model)
+}
 
 
 public func == <Model: CKModel, Value: RawRepresentable>(lhs: KeyPath<Model, CKField<Value>>, rhs: Value) -> CKComparisonFilter<Model> where Value.RawValue: AttributeValueProtocol {
@@ -151,22 +159,35 @@ public func != <Model: CKModel, Value: RawRepresentable>(lhs: KeyPath<Model, CKF
 }
 
 
-
 public func && <Model: CKModel>(lhs: some CKFilter<Model>, rhs: some CKFilter<Model>) -> CKLogicFilter<Model> {
     return CKLogicFilter(filters: [lhs, rhs], _operator: .and)
 }
 
-public func || <Model: CKModel>(lhs: some CKFilter<Model>, rhs: some CKFilter<Model>) -> CKLogicFilter<Model> {
-    return CKLogicFilter(filters: [lhs, rhs], _operator: .or)
-}
-
-
+//public func || <Model: CKModel>(lhs: some CKFilter<Model>, rhs: some CKFilter<Model>) -> CKLogicFilter<Model> {
+//    return CKLogicFilter(filters: [lhs, rhs], _operator: .or)
+//}
 
 
 extension CKFilter {
     
     public static func predicate<Model: CKModel>(format: String, _ args: CVarArg...) -> Self where Self == CKPredicateFilter<Model> {
         return CKPredicateFilter(predicate: NSPredicate(format: format, args))
+    }
+    
+    public static func created<Model: CKModel>(by userRecordID: CKRecord.ID) -> Self where Self == CKPredicateFilter<Model> {
+        return CKPredicateFilter(predicate: NSPredicate(format: "creatorUserRecordID == %@", CKRecord.Reference(recordID: userRecordID, action: .none)))
+    }
+    
+    public static func createdByCurrentUser<Model: CKModel>() -> Self where Self == CKPredicateFilter<Model> {
+        return CKPredicateFilter(predicate: NSPredicate(format: "creatorUserRecordID == %@", CKRecord.Reference(recordID: CKRecord.ID(recordName: CKCurrentUserDefaultName), action: .none)))
+    }
+    
+    public static func lastModified<Model: CKModel>(by userRecordID: CKRecord.ID) -> Self where Self == CKPredicateFilter<Model> {
+        return CKPredicateFilter(predicate: NSPredicate(format: "lastModifiedUserRecordID == %@", CKRecord.Reference(recordID: userRecordID, action: .none)))
+    }
+    
+    public static func lastModifiedbyCurrentUser<Model: CKModel>() -> Self where Self == CKPredicateFilter<Model> {
+        return CKPredicateFilter(predicate: NSPredicate(format: "lastModifiedUserRecordID == %@", CKRecord.Reference(recordID: CKRecord.ID(recordName: CKCurrentUserDefaultName), action: .none)))
     }
     
 }
@@ -177,9 +198,9 @@ extension CKFilter {
         return CKLogicFilter(filters: filters, _operator: .and)
     }
     
-    public static func or<Model: CKModel>(_ filters: [any CKFilter]) -> Self where Self == CKLogicFilter<Model> {
-        return CKLogicFilter(filters: filters, _operator: .or)
-    }
+//    public static func or<Model: CKModel>(_ filters: [any CKFilter]) -> Self where Self == CKLogicFilter<Model> {
+//        return CKLogicFilter(filters: filters, _operator: .or)
+//    }
     
 }
 

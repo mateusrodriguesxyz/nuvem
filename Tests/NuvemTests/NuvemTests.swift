@@ -43,6 +43,9 @@ final class NuvemTests: XCTestCase {
         
         @CKAssetField("af")
         var af: Data?
+
+        @CKAssetListField("afl", default: [])
+        var afl: [Data]
         
         @CKField("ee")
         var ee: E
@@ -65,6 +68,22 @@ final class NuvemTests: XCTestCase {
     
     override class func tearDown() {
         print(#function)
+    }
+    
+    func testFields() {
+        
+        let fields1 = Fields<M2>.include(\.$f1, \.$f2)
+        XCTAssertEqual(fields1.desiredKeys, ["f1", "f2"])
+        
+        let fields2 = Fields<M2>.exclude(\.$f1)
+        XCTAssertEqual(Set(fields2.desiredKeys ?? []), Set(["f2", "f3"]))
+        
+        let fields3 = Fields<M2>.all
+        XCTAssertEqual(fields3.desiredKeys, nil)
+        
+        let fields4 = Fields<M2>.none
+        XCTAssertEqual(fields4.desiredKeys, [])
+        
     }
     
     func testModelWithOptionalField() {
@@ -178,6 +197,50 @@ final class NuvemTests: XCTestCase {
         XCTAssertEqual(_m2.reference?.recordID, r.recordID)
         
     }
+
+    func testCKAssetListField_ReadFromRecord() {
+
+        @CKAssetListField("assets", default: []) var assets: [Data]
+
+        let d1 = Data([1, 2, 3])
+        let d2 = Data([4, 5, 6])
+
+        let url1 = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let url2 = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+
+        try! d1.write(to: url1)
+        try! d2.write(to: url2)
+
+        let record = CKRecord(recordType: M.recordType)
+        record["assets"] = [CKAsset(fileURL: url1), CKAsset(fileURL: url2)] as NSArray
+
+        _assets.storage.record = record
+
+        XCTAssertEqual(assets, [d1, d2])
+
+    }
+
+    func testCKAssetListField_UpdateRecord() {
+
+        @CKAssetListField("assets", default: []) var assets: [Data]
+
+        let record = CKRecord(recordType: M.recordType)
+        _assets.storage.record = record
+
+        assets = [Data([1]), Data([2]), Data([3])]
+
+        XCTAssertNil(record["assets"])
+
+        _assets.updateRecord()
+
+        XCTAssertNotNil(record["assets"])
+
+        assets = []
+        _assets.updateRecord()
+
+        XCTAssertNil(record["assets"])
+
+    }
     
     func testCKModel() {
         
@@ -204,12 +267,14 @@ final class NuvemTests: XCTestCase {
         m.a = 6
         m.rf = M2(record: CKRecord(recordType: "M2"))
         m.af = Data()
+        m.afl = [Data([7]), Data([8])]
                 
         m.updateRecordWithFields()
         
         XCTAssertEqual(record["a"], 6)
         XCTAssertNotNil(record["rf"])
         XCTAssertNotNil(record["af"])
+        XCTAssertNotNil(record["afl"])
         
         m = mCopy
         
@@ -218,6 +283,7 @@ final class NuvemTests: XCTestCase {
         XCTAssertEqual(record["a"], 5)
         XCTAssertNil(record["rf"])
         XCTAssertNil(record["af"])
+        XCTAssertNotNil(record["afl"])
                 
     }
     
@@ -296,15 +362,15 @@ final class NuvemTests: XCTestCase {
         
         let builder = DesiredKeysBuilder<M>()
         
-        XCTAssertEqual(builder.desiredKeys, nil)
+        XCTAssertEqual(builder.build(), nil)
         
         builder.add(\.$a)
         
-        XCTAssertEqual(builder.desiredKeys, ["a"])
+        XCTAssertEqual(builder.build(), ["a"])
         
         builder.add(\.$b, \.$c)
         
-        XCTAssertEqual(builder.desiredKeys, ["a", "b", "c"])
+        XCTAssertEqual(builder.build(), ["a", "b", "c"])
         
     }
     
@@ -459,7 +525,7 @@ final class NuvemTests: XCTestCase {
         builder.add(s1)
         builder.add(s2)
         
-        XCTAssertEqual(builder.sortDescriptors, [d1, d2])
+        XCTAssertEqual(builder.build(), [d1, d2])
                 
     }
     
@@ -478,7 +544,7 @@ final class NuvemTests: XCTestCase {
         let query = CKQueryBuilder<M2>()
             .field(\.$f1, \.$f2)
 
-        XCTAssertEqual(query.desiredKeysBuilder.desiredKeys?.sorted(), ["f1", "f2"])
+        XCTAssertEqual(query.desiredKeysBuilder.build()?.sorted(), ["f1", "f2"])
         
         
     }
@@ -488,7 +554,7 @@ final class NuvemTests: XCTestCase {
         let query = CKQueryBuilder<M2>()
             .field(exclude: \.$f1)
 
-        XCTAssertEqual(query.desiredKeysBuilder.desiredKeys?.sorted(), ["f2", "f3"])
+        XCTAssertEqual(query.desiredKeysBuilder.build()?.sorted(), ["f2", "f3"])
         
         
     }
