@@ -13,7 +13,18 @@ public final class CKObservable<M: CKModel>: Identifiable {
         self.model = model
     }
     public subscript<T>(dynamicMember keyPath: KeyPath<M, T>) -> T {
-        model[keyPath: keyPath]
+        get {
+            model[keyPath: keyPath]
+        }
+    }
+    @_disfavoredOverload
+    public subscript<T>(dynamicMember keyPath: WritableKeyPath<M, T>) -> T {
+        get {
+            model[keyPath: keyPath]
+        }
+        set {
+            model[keyPath: keyPath] = newValue
+        }
     }
 }
 
