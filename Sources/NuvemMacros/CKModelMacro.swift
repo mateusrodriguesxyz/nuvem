@@ -1,3 +1,4 @@
+import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
@@ -40,27 +41,34 @@ extension CKModelMacro: MemberMacro {
         """
         
         var initDecls = [DeclSyntax]()
-                
+        
         initDecls.append("init() { }")
+
         
-        let properties = structDecl.memberBlock.members.compactMap( { $0.decl.as(VariableDeclSyntax.self) })
-            .filter({ $0.bindings.first?.accessorBlock == nil })
-            .filter({ $0.bindingSpecifier.trimmedDescription != "let" })
-        
-        if !properties.isEmpty {
-            
-            let identifiers = properties.compactMap({ $0.bindings.first?.pattern.as(IdentifierPatternSyntax.self) })
-            let types = properties.compactMap({ $0.bindings.first?.typeAnnotation })
-            
-            let  memberwiseInitDecl: DeclSyntax = """
-        init(\(raw: zip(identifiers, types).map({ "\($0.0.trimmedDescription)\($0.1.trimmedDescription)" }).joined(separator: ", "))) {
-        \(raw: identifiers.map({ "self.\($0.trimmedDescription) = \($0.trimmedDescription)" }).joined(separator: "\n"))
-            self.record = CKRecord(recordType: \(recordName))
+        let hasExistingInit = structDecl.memberBlock.members.contains { member in
+            member.decl.is(InitializerDeclSyntax.self)
         }
-        """
+        
+        if !hasExistingInit {
+            let properties = structDecl.memberBlock.members.compactMap( { $0.decl.as(VariableDeclSyntax.self) })
+                .filter({ $0.bindings.first?.accessorBlock == nil })
+                .filter({ $0.bindingSpecifier.trimmedDescription != "let" })
             
-            initDecls.append(memberwiseInitDecl)
-            
+            if !properties.isEmpty {
+                
+                let identifiers = properties.compactMap({ $0.bindings.first?.pattern.as(IdentifierPatternSyntax.self) })
+                let types = properties.compactMap({ $0.bindings.first?.typeAnnotation })
+                
+                let  memberwiseInitDecl: DeclSyntax = """
+            init(\(raw: zip(identifiers, types).map({ "\($0.0.trimmedDescription)\($0.1.trimmedDescription)" }).joined(separator: ", "))) {
+            \(raw: identifiers.map({ "self.\($0.trimmedDescription) = \($0.trimmedDescription)" }).joined(separator: "\n"))
+                self.record = CKRecord(recordType: \(recordName))
+            }
+            """
+                
+                initDecls.append(memberwiseInitDecl)
+                
+            }
         }
                 
         return [
