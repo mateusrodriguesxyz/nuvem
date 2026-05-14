@@ -139,12 +139,12 @@ public func != <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceF
     return CKComparisonFilter(lhs, .isNotEqualTo, rhs)
 }
 
-@available(iOS 17.0, *)
+@available(macOS 14.0, iOS 17.0, *)
 public func == <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceField<Value>>, rhs: CKObservable<Value>) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isEqualTo, rhs.model)
 }
 
-@available(iOS 17.0, *)
+@available(macOS 14.0, iOS 17.0, *)
 public func != <Model: CKModel, Value: CKModel>(lhs: KeyPath<Model, CKReferenceField<Value>>, rhs: CKObservable<Value>) -> CKComparisonFilter<Model> {
     return CKComparisonFilter(lhs, .isNotEqualTo, rhs.model)
 }

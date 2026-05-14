@@ -74,7 +74,7 @@ public func == <Model: CKModel>(lhs: CKReferenceField<Model>, rhs: Model) -> Boo
     lhs.id == rhs.id
 }
 
-@available(iOS 17.0, *)
+@available(macOS 14.0, iOS 17.0, *)
 public func == <Model: CKModel>(lhs: CKReferenceField<Model>, rhs: CKObservable<Model>) -> Bool {
     lhs.id == rhs.model.id
 }
