@@ -7,6 +7,31 @@ public protocol CKFieldValue {
     
 }
 
+public protocol CKCodable: Codable, CKFieldValue { }
+
+extension CKCodable {
+    public static func get(_ value: (any CKRecordValue)?) -> Self? {
+        do {
+            guard let data = (value as? String)?.data(using: .utf8) else {
+                return nil
+            }
+            return try JSONDecoder().decode(Self.self, from: data)
+        } catch {
+            print(error)
+            return nil
+        }
+    }
+    public static func set(_ value: Self?) -> (any CKRecordValue)? {
+        do {
+            let data = try JSONEncoder().encode(value)
+            return String(data: data, encoding: .utf8) as? CKRecordValue
+        } catch {
+            print(error)
+            return nil
+        }
+    }
+}
+
 extension CKFieldValue where Self: CKRecordValueProtocol {
     
     public static func get(_ value: CKRecordValue?) -> Self? {

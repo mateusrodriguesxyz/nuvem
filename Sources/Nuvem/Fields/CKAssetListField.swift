@@ -95,7 +95,7 @@ import CloudKit
                     let id = newFile.drop(while: { $0 != "." }).dropFirst()
                     return $0.contains(id) && $0 != newFile
                 }
-                print("OLD FILES: \(oldFiles.count)")
+//                print("OLD FILES: \(oldFiles.count)")
             } catch {
                 print(error)
             }
