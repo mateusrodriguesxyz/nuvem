@@ -10,6 +10,8 @@ import CloudKit
     
     public var references: [CKRecord.Reference] { recordValue as? [CKRecord.Reference] ?? record?[key] as? [CKRecord.Reference] ?? [] }
     
+    private var action: CKRecord.ReferenceAction
+    
     var storage: FieldStorage
     
     public let key: String
@@ -34,16 +36,17 @@ import CloudKit
             hasBeenSet = true
             value = newValue
             if let newValue {
-                recordValue = newValue.map({ CKRecord.Reference(record: $0.record, action: .none) }) as CKRecordValue
+                recordValue = newValue.map({ CKRecord.Reference(record: $0.record, action: action) }) as CKRecordValue
             }
         }
     }
     
     public var projectedValue: CKReferenceListField<Value> { self }
     
-    public init(_ key: String) {
+    public init(_ key: String, action: CKRecord.ReferenceAction = .none) {
         self.key = key
         self.storage = .init(key: key)
+        self.action = action
     }
     
     @discardableResult
