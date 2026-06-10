@@ -82,15 +82,33 @@ extension Optional: CKFieldValue where Wrapped: CKFieldValue {
 
 }
 
-extension Array: CKFieldValue where Element: CKRecordValueProtocol {
+extension Array: CKFieldValue where Element: CKFieldValue {
     
-    public static func get(_ value: CKRecordValue?) -> Self? {
-        return value as? Self
+    public static func get(_ value: (any CKRecordValue)?) -> Array<Element>? {
+        value as? Self
     }
     
-    public static func set(_ value: Self?) -> CKRecordValue? {
-        return value as? CKRecordValue
+    public static func get(_ value: (any CKRecordValue)?) -> Array<Element>? where Element: CKCodable {
+        guard let string = value as? String, let data = string.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(Self.self, from: data)
     }
     
+    public static func set(_ value: Array<Element>?) -> (any CKRecordValue)? {
+        value as? CKRecordValue
+    }
+    
+    public static func set(_ value: Array<Element>?) -> (any CKRecordValue)? where Element: CKCodable  {
+        guard let data = try? JSONEncoder().encode(value) else { return nil }
+        return String(data: data, encoding: .utf8) as? CKRecordValue
+    }
+    
+    public static func set(_ value: Self?) -> (any CKRecordValue)? where Element: RawRepresentable, Element.RawValue: CKRecordValueProtocol {
+        value?.map(\.rawValue) as? CKRecordValue
+    }
+    
+    public static func get(_ value: (any CKRecordValue)?) -> Self? where Element: RawRepresentable, Element.RawValue: CKRecordValueProtocol {
+        guard let rawValues = value as? [Element.RawValue] else { return nil }
+        return rawValues.compactMap(Element.init)
+    }
 }
 

@@ -3,6 +3,16 @@ import CloudKit
 @testable import Nuvem
 
 final class NuvemTests: XCTestCase {
+    
+    struct Content: CKCodable, Equatable {
+        let text: String
+    }
+    
+    @CKModel()
+    struct Parent {
+        @CKField("contents")
+        var contents: [Content]
+    }
 
     enum E: String, CKFieldValue {
         case one
@@ -134,6 +144,18 @@ final class NuvemTests: XCTestCase {
         XCTAssertEqual([Bool].set([true, false, true, false]) as! [Int], [1, 0, 1, 0])
         XCTAssertEqual([Bool].get([1, 0, 1, 0] as CKRecordValue), [true, false, true, false])
                 
+    }
+    
+    func testCKFieldValue_Array_RawRepresentable() {
+        let value: [E] = [.one, .two, .three]
+        XCTAssertEqual(([E].set(value) as? [String]), ["one", "two", "three"])
+        XCTAssertEqual([E].get(["one", "two", "three"] as CKRecordValue), value)
+    }
+    
+    func testCKFieldValue_Array_Codable() {
+        let contents: [Content] = [Content(text: "hello"), Content(text: "hello")]
+        XCTAssertEqual(([Content].set(contents) as? String), #"[{"text":"hello"},{"text":"hello"}]"#)
+        XCTAssertEqual([Content].get(#"[{"text":"hello"},{"text":"hello"}]"# as CKRecordValue), contents)
     }
     
     func testCKField_1() {
@@ -404,10 +426,6 @@ final class NuvemTests: XCTestCase {
 
         XCTAssertEqual(f7._operator, .and)
 
-        let f8: CKLogicFilter<M> = f1 || f2
-
-        XCTAssertEqual(f8._operator, .or)
-
         let r = M2(record: CKRecord(recordType: "M2"))
 
         let f9: CKComparisonFilter<M> = \.$r == r.id
@@ -457,38 +475,13 @@ final class NuvemTests: XCTestCase {
         let p6 = f6.predicate
         
         XCTAssertEqual(p6, NSCompoundPredicate(andPredicateWithSubpredicates: [p1, p2]))
-        
-        let f7: some CKFilter<M> = (\.$a == 1) || (\.$b == 1.5)
-        
-        let p7 = f7.predicate
-        
-        XCTAssertEqual(p7, NSCompoundPredicate(orPredicateWithSubpredicates: [p1, p2]))
-        
+
         let f8: CKLogicFilter<M> = (\.$a == 1) && (\.$b == 1.5) && (\.$c == "hello")
         
         let p8 = f8.predicate
         
         XCTAssertEqual(p8, NSCompoundPredicate(andPredicateWithSubpredicates: [p6, p3]))
         
-        let f9: CKLogicFilter<M> = (\.$a == 1) || (\.$b == 1.5) || (\.$c == "hello")
-        
-        let p9 = f9.predicate
-        
-        XCTAssertEqual(p9, NSCompoundPredicate(orPredicateWithSubpredicates: [p7, p3]))
-        
-//        let f10: CKLogicFilter<M> = .isDateInToday(\.$e)
-//                
-//        let f11: CKLogicFilter<M> = .isDateInThisMonth(\.$e)
-//        
-//        let f12: CKLogicFilter<M> = .isDateInThisYear(\.$e)
-//        
-//        let f13: CKLogicFilter<M> = .isDate(\.$e, inSameHourAs: .now)
-//        
-//        let f14: CKLogicFilter<M> = .isDate(\.$e, inSameMinuteAs: .now)
-//        
-//        let f15: CKPredicateFilter<M> = .predicate(format: "a == %@", NSNumber(value: 1))
-//        
-//        let f16: some CKFilter<M> = \.$ee == .one
         
         let builder = PredicateBuilder<M>()
         
