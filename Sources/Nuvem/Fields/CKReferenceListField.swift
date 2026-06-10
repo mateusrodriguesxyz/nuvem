@@ -19,25 +19,27 @@ import CloudKit
     var referenceForNilRecord: CKRecord.Reference?
     
     var value: [Value]?
+    
+    private let defaultValue: [Value]?
 
-    public var wrappedValue: [Value]? {
+    public var wrappedValue: [Value] {
         get {
             if let value {
                 return value
             } else {
                 if let records = storage.referenceRecords {
                     return records.map(Value.init)
+                } else if let defaultValue {
+                    return defaultValue
                 } else {
-                    return nil
+                    return []
                 }
             }
         }
         set {
             hasBeenSet = true
             value = newValue
-            if let newValue {
-                recordValue = newValue.map({ CKRecord.Reference(record: $0.record, action: action) }) as CKRecordValue
-            }
+            recordValue = newValue.map({ CKRecord.Reference(record: $0.record, action: action) }) as CKRecordValue
         }
     }
     
@@ -45,6 +47,14 @@ import CloudKit
     
     public init(_ key: String, action: CKRecord.ReferenceAction = .none) {
         self.key = key
+        self.defaultValue = nil
+        self.storage = .init(key: key)
+        self.action = action
+    }
+    
+    public init(_ key: String, default defaultValue: [Value], action: CKRecord.ReferenceAction = .none) {
+        self.key = key
+        self.defaultValue = defaultValue
         self.storage = .init(key: key)
         self.action = action
     }
