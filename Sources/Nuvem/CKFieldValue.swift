@@ -82,33 +82,49 @@ extension Optional: CKFieldValue where Wrapped: CKFieldValue {
 
 }
 
+private protocol _JSONCodableArray {
+    static func _decodeJSON(from data: Data) -> Any?
+    static func _encodeJSON(_ value: Any) -> (any CKRecordValue)?
+}
+
+extension Array: _JSONCodableArray where Element: CKCodable {
+    static func _decodeJSON(from data: Data) -> Any? {
+        try? JSONDecoder().decode(Self.self, from: data)
+    }
+    static func _encodeJSON(_ value: Any) -> (any CKRecordValue)? {
+        guard let array = value as? Self, let data = try? JSONEncoder().encode(array) else { return nil }
+        return String(data: data, encoding: .utf8) as? CKRecordValue
+    }
+}
+
 extension Array: CKFieldValue where Element: CKFieldValue {
     
     public static func get(_ value: (any CKRecordValue)?) -> Array<Element>? {
-        value as? Self
-    }
-    
-    public static func get(_ value: (any CKRecordValue)?) -> Array<Element>? where Element: CKCodable {
-        guard let string = value as? String, let data = string.data(using: .utf8) else { return nil }
-        return try? JSONDecoder().decode(Self.self, from: data)
+        if let result = value as? Self {
+            return result
+        }
+        if let json = value as? String, let data = json.data(using: .utf8), let decoded = (Self.self as? any _JSONCodableArray.Type)?._decodeJSON(from: data) as? Self {
+            return decoded
+        }
+        return nil
     }
     
     public static func set(_ value: Array<Element>?) -> (any CKRecordValue)? {
-        value as? CKRecordValue
-    }
-    
-    public static func set(_ value: Array<Element>?) -> (any CKRecordValue)? where Element: CKCodable  {
-        guard let data = try? JSONEncoder().encode(value) else { return nil }
-        return String(data: data, encoding: .utf8) as? CKRecordValue
-    }
-    
-    public static func set(_ value: Self?) -> (any CKRecordValue)? where Element: RawRepresentable, Element.RawValue: CKRecordValueProtocol {
-        value?.map(\.rawValue) as? CKRecordValue
+        guard let value else { return nil }
+        if let encoded = (Self.self as? any _JSONCodableArray.Type)?._encodeJSON(value) {
+            return encoded
+        }
+        return value as CKRecordValue
     }
     
     public static func get(_ value: (any CKRecordValue)?) -> Self? where Element: RawRepresentable, Element.RawValue: CKRecordValueProtocol {
         guard let rawValues = value as? [Element.RawValue] else { return nil }
         return rawValues.compactMap(Element.init)
     }
+    
+    public static func set(_ value: Self?) -> (any CKRecordValue)? where Element: RawRepresentable, Element.RawValue: CKRecordValueProtocol {
+        value?.map(\.rawValue) as? CKRecordValue
+    }
+    
 }
 
