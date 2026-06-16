@@ -20,7 +20,7 @@ extension CKModelMacro: MemberMacro {
         
         let observableTypealiasDecl: DeclSyntax = "typealias Observable = CKObservable<\(structDecl.name.trimmed)>"
         
-        if let argument = node.arguments?.trimmedDescription {
+        if let argument = node.arguments?.trimmedDescription, !argument.isEmpty {
             recordName = "\(raw: argument)"
         } else {
             recordName = "\(literal: structDecl.name.text)"
