@@ -31,11 +31,9 @@ import CloudKit
     public var wrappedValue: Value {
         get {
             if let value {
-//                print("value from local")
                 return value
             }
             else if storage.loadedValue != nil, let loadedValue = storage.loadedValue as? Value {
-//                print("value from storage")
                 return loadedValue
             }
             else if
@@ -43,14 +41,11 @@ import CloudKit
                 let fileURL = asset.fileURL,
                 let data = FileManager.default.contents(atPath: fileURL.path)
             {
-                clearOldFiles(fileURL)
                 let value = Value.get(data)!
                 storage.loadedValue = value
-//                print("value from record: \(fileURL)")
                 return value
             }
             else if let defaultValue {
-//                print("value from default")
                 return defaultValue
             }
             else {
@@ -60,21 +55,8 @@ import CloudKit
         set {
             hasBeenSet = true
             value = newValue
-//            if let data = Value.set(newValue) {
-//                let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-//                do {
-//                    try data.write(to: url)
-//                    self.recordValue = CKAsset(fileURL: url)
-//                } catch {
-//                    print(error)
-//                }
-//            } else {
-//                recordValue = nil
-//            }
         }
     }
-    
-//    public var projectedValue: CKAssetField<Value> { self }
     
     public var projectedValue: CKAssetField<Value> {
         get {
@@ -124,10 +106,9 @@ import CloudKit
                     let id = newFile.drop(while: { $0 != "." }).dropFirst()
                     return $0.contains(id) && $0 != newFile
                 }
-//                print("OLD FILES: \(oldFiles.count)")
-//                try oldFiles.forEach {
-//                    try FileManager.default.removeItem(atPath: cloudKitCachesDirectory + $0)
-//                }
+                try oldFiles.forEach {
+                    try FileManager.default.removeItem(atPath: cloudKitCachesDirectory + $0)
+                }
             } catch {
                 print(error)
             }

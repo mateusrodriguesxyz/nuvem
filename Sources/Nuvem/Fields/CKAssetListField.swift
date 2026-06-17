@@ -34,7 +34,6 @@ import CloudKit
                           let data = FileManager.default.contents(atPath: fileURL.path) else {
                         return nil
                     }
-                    clearOldFiles(fileURL)
                     return Value.get(data)
                 }
                 storage.loadedValue = values
@@ -95,7 +94,9 @@ import CloudKit
                     let id = newFile.drop(while: { $0 != "." }).dropFirst()
                     return $0.contains(id) && $0 != newFile
                 }
-//                print("OLD FILES: \(oldFiles.count)")
+                try oldFiles.forEach {
+                    try FileManager.default.removeItem(atPath: cloudKitCachesDirectory + $0)
+                }
             } catch {
                 print(error)
             }
