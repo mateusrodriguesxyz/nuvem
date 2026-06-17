@@ -28,7 +28,7 @@ extension CKModelMacro: MemberMacro {
         
         let recordTypeDecl: DeclSyntax = "public static let recordType: CKRecord.RecordType = \(recordName)"
         
-        let recordDecl: DeclSyntax = "var record: CKRecord!"
+        let recordDecl: DeclSyntax = "var record: CKRecord! = CKRecord(recordType: \(recordName))"
         
         let creationDateDecl: DeclSyntax = """
         @CKTimestamp(.creation)
@@ -49,6 +49,7 @@ extension CKModelMacro: MemberMacro {
             member.decl.is(InitializerDeclSyntax.self)
         }
         
+        
         if !hasExistingInit {
             let properties = structDecl.memberBlock.members.compactMap( { $0.decl.as(VariableDeclSyntax.self) })
                 .filter({ $0.bindings.first?.accessorBlock == nil })
@@ -62,12 +63,28 @@ extension CKModelMacro: MemberMacro {
                 let  memberwiseInitDecl: DeclSyntax = """
             init(\(raw: zip(identifiers, types).map({ "\($0.0.trimmedDescription)\($0.1.trimmedDescription)" }).joined(separator: ", "))) {
             \(raw: identifiers.map({ "self.\($0.trimmedDescription) = \($0.trimmedDescription)" }).joined(separator: "\n"))
-                self.record = CKRecord(recordType: \(recordName))
             }
             """
                 
                 initDecls.append(memberwiseInitDecl)
+                let initSignature = identifiers.map { "\($0.trimmedDescription):" }.joined()
                 
+                context.diagnose(
+                    .init(
+                        node: declaration,
+                        message: MacroExpansionWarningMessage("'@CKModel' synthesized initializer is deprecated"),
+                        fixIt: FixIt(
+                            message: MacroExpansionFixItMessage("Add 'init(\(initSignature))'"),
+                            changes: [
+                                .replaceText(
+                                    range: declaration.memberBlock.rightBrace.position..<declaration.memberBlock.rightBrace.position,
+                                    with: "\n" + memberwiseInitDecl.description,
+                                    in: Syntax(declaration)
+                                )
+                            ]
+                        )
+                    )
+                )
             }
         }
                 
