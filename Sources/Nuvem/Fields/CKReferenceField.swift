@@ -1,6 +1,6 @@
 import CloudKit
 
-@propertyWrapper public struct CKReferenceField<Value: CKModel>: CKReferenceFieldProtocol, _CKFieldProtocol {
+public struct CKReferenceField<Value: CKModel>: CKReferenceFieldProtocol, _CKFieldProtocol {
     
     var hasBeenSet: Bool = false
     
@@ -46,6 +46,13 @@ import CloudKit
         }
     }
     
+    public init(wrappedValue: Value?, _ key: String, action: CKRecord.ReferenceAction = .none) {
+        self.key = key
+        self.storage = .init(key: key)
+        self.action = action
+        self.value = wrappedValue
+    }
+
     public init(_ key: String, action: CKRecord.ReferenceAction = .none) {
         self.key = key
         self.storage = .init(key: key)

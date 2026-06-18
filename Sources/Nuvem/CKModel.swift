@@ -1,10 +1,30 @@
 import CloudKit
 import SwiftUI
 
-@attached(member, names: named(recordType), named(record), named(creationDate), named(modificationDate), named(init), named(Observable))
+@attached(member, names: named(recordType), named(record), named(creationDate), named(modificationDate), named(Observable))
 @attached(memberAttribute)
-@attached(extension, conformances: CKModel)
+@attached(extension, conformances: CKModel, names: named(init))
 public macro CKModel(_ name: String? = nil) = #externalMacro(module: "NuvemMacros", type: "CKModelMacro")
+
+@attached(peer, names: prefixed(`_`), prefixed(`$`))
+@attached(accessor, names: named(get), named(set), named(init))
+public macro CKField(_ key: String, default defaultValue: Any? = nil) = #externalMacro(module: "NuvemMacros", type: "CKFieldMacro")
+
+@attached(peer, names: prefixed(`_`), prefixed(`$`))
+@attached(accessor, names: named(get), named(set), named(init))
+public macro CKAssetField(_ key: String, default defaultValue: Any? = nil) = #externalMacro(module: "NuvemMacros", type: "CKAssetFieldMacro")
+
+@attached(peer, names: prefixed(`_`), prefixed(`$`))
+@attached(accessor, names: named(get), named(set), named(init))
+public macro CKAssetListField(_ key: String, default defaultValue: Any? = nil) = #externalMacro(module: "NuvemMacros", type: "CKAssetListFieldMacro")
+
+@attached(peer, names: prefixed(`_`), prefixed(`$`))
+@attached(accessor, names: named(get), named(set), named(init))
+public macro CKReferenceField(_ key: String, action: CKRecord.ReferenceAction = .none) = #externalMacro(module: "NuvemMacros", type: "CKReferenceFieldMacro")
+
+@attached(peer, names: prefixed(`_`), prefixed(`$`))
+@attached(accessor, names: named(get), named(set), named(init))
+public macro CKReferenceListField(_ key: String, default defaultValue: Any? = nil, action: CKRecord.ReferenceAction = .none) = #externalMacro(module: "NuvemMacros", type: "CKReferenceListFieldMacro")
 
 public protocol CKModel: CustomDebugStringConvertible, Identifiable where ID == String {
     static var recordType: CKRecord.RecordType { get }

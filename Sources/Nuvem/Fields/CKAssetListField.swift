@@ -1,6 +1,6 @@
 import CloudKit
 
-@propertyWrapper public struct CKAssetListField<Value: CKAssetFieldValue>: CKAssetListFieldProtocol, _CKFieldProtocol {
+public struct CKAssetListField<Value: CKAssetFieldValue>: CKAssetListFieldProtocol, _CKFieldProtocol {
 
     var hasBeenSet: Bool = false
 
@@ -64,6 +64,12 @@ import CloudKit
     public init(_ key: String, default defaultValue: [Value]) {
         self.key = key
         self.defaultValue = defaultValue
+        self.storage = .init(key: key)
+    }
+
+    public init(wrappedValue: [Value], _ key: String) {
+        self.key = key
+        self.defaultValue = wrappedValue
         self.storage = .init(key: key)
     }
 

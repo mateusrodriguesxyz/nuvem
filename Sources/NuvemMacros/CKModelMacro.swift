@@ -40,11 +40,6 @@ extension CKModelMacro: MemberMacro {
         var modificationDate: Date?
         """
         
-        var initDecls = [DeclSyntax]()
-        
-        initDecls.append("init() { }")
-
-        
         let hasExistingInit = structDecl.memberBlock.members.contains { member in
             member.decl.is(InitializerDeclSyntax.self)
         }
@@ -66,7 +61,7 @@ extension CKModelMacro: MemberMacro {
             }
             """
                 
-                initDecls.append(memberwiseInitDecl)
+//                initDecls.append(memberwiseInitDecl)
                 let initSignature = identifiers.map { "\($0.trimmedDescription):" }.joined()
                 
                 context.diagnose(
@@ -94,7 +89,7 @@ extension CKModelMacro: MemberMacro {
             modificationDateDecl,
             recordTypeDecl,
             recordDecl
-        ] + initDecls
+        ]
         
     }
     
@@ -131,7 +126,7 @@ extension CKModelMacro: MemberAttributeMacro {
         in context: some MacroExpansionContext
     ) throws -> [AttributeSyntax] {
         
-        guard 
+        guard
             let variable = member.as(VariableDeclSyntax.self),
             variable.bindings.first?.accessorBlock == nil,
             variable.bindingSpecifier == .keyword(.var),
@@ -139,61 +134,11 @@ extension CKModelMacro: MemberAttributeMacro {
         else {
             return []
         }
-//        
-//        
-//        if let attribute = variable.attributes.first, attribute.trimmedDescription.contains("@CKReferenceField") == true {
-//            
-//            let key: DeclSyntax
-//            
-//            if let argument = attribute.as(AttributeSyntax.self)?.arguments?.trimmedDescription {
-//                key = "\(raw: argument)"
-//            } else {
-//                key = "\(literal: identifier)"
-//            }
-//            
-//            if 
-//                let type = variable.bindings.first?.typeAnnotation?.type.as(OptionalTypeSyntax.self)?.wrappedType,
-//                type.is(ArrayTypeSyntax.self)
-//            {
-//                return ["@CKReferenceFields.Many(\(key))"]
-//            } else {
-//                return ["@CKReferenceFields.One(\(key))"]
-//            }
-//            
-//        }
-//        
-//        if let attribute = variable.attributes.first, attribute.trimmedDescription.contains("@CKAssetField") == true {
-//            
-//            let key: DeclSyntax
-//            
-//            if let argument = attribute.as(AttributeSyntax.self)?.arguments?.trimmedDescription {
-//                key = "\(raw: argument)"
-//            } else {
-//                key = "\(literal: identifier)"
-//            }
-//            
-//            return ["@CKFields.Asset(\(key))"]
-//            
-//        }
-//        
-//        if let attribute = variable.attributes.first, attribute.trimmedDescription.contains("@CKField") == true {
-//            
-//            let key: DeclSyntax
-//            
-//            if let argument = attribute.as(AttributeSyntax.self)?.arguments?.trimmedDescription {
-//                key = "\(raw: argument)"
-//            } else {
-//                key = "\(literal: identifier)"
-//            }
-//            
-//            return ["@CKFields.Default(\(key))"]
-//            
-//        }
-//        
+
         if variable.attributes.isEmpty {
             return ["@CKField(\(literal: identifier))"]
         }
-        
+
         return []
     }
     

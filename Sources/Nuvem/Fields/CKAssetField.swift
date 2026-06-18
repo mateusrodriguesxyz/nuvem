@@ -1,6 +1,6 @@
 import CloudKit
 
-@propertyWrapper public struct CKAssetField<Value: CKAssetFieldValue>: CKFieldProtocol, _CKFieldProtocol {
+public struct CKAssetField<Value: CKAssetFieldValue>: CKFieldProtocol, _CKFieldProtocol {
     
     enum Source {
         case storage
@@ -75,6 +75,12 @@ import CloudKit
 
     public init(_ key: String) {
         self.key = key
+        self.storage = .init(key: key)
+    }
+
+    public init(wrappedValue: Value, _ key: String) {
+        self.key = key
+        self.defaultValue = wrappedValue
         self.storage = .init(key: key)
     }
 

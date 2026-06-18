@@ -1,7 +1,7 @@
 import CloudKit
 import Combine
 
-@propertyWrapper public struct CKField<Value: CKFieldValue>: CKFieldProtocol, _CKFieldProtocol {
+public struct CKField<Value: CKFieldValue>: CKFieldProtocol, _CKFieldProtocol {
     
     private(set) var hasBeenSet: Bool = false
     
