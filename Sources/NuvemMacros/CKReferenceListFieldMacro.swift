@@ -11,28 +11,19 @@ public enum CKReferenceListFieldMacro: AccessorMacro, PeerMacro {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        guard let variableDecl = declaration.as(VariableDeclSyntax.self),
-              let binding = variableDecl.bindings.first,
-              let identifier = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
-              let typeAnnotation = binding.typeAnnotation?.type
+        guard
+            let property = declaration.as(VariableDeclSyntax.self),
+            let identifier = property.identifier,
+            let type = property.type
         else {
             return []
         }
 
-        let propertyType = typeAnnotation.trimmedDescription
+        let propertyType = type.trimmedDescription
         let modelType = listFieldGenericType(from: propertyType)
-        let (key, defaultValueExpr) = extractFieldArguments(from: node, propertyName: identifier)
-        let keyLiteral = "\"\(key)\""
 
-        // var _name = CKReferenceListField<Model>("key", action: .none)
-        // or with default:
-        // var _name = CKReferenceListField<Model>("key", default: [], action: .none)
-        let storageDecl: DeclSyntax
-        if let defaultValueExpr {
-            storageDecl = "var _\(raw: identifier) = CKReferenceListField<\(raw: modelType)>(\(raw: keyLiteral), default: \(raw: defaultValueExpr), action: .none)"
-        } else {
-            storageDecl = "var _\(raw: identifier) = CKReferenceListField<\(raw: modelType)>(\(raw: keyLiteral), action: .none)"
-        }
+        // var _name: CKReferenceListField<Model>
+        let storageDecl: DeclSyntax = "var _\(raw: identifier): CKReferenceListField<\(raw: modelType)>"
 
         // var $name: CKReferenceListField<Model> { _name.projectedValue }
         let projectedDecl: DeclSyntax = """
@@ -49,18 +40,23 @@ public enum CKReferenceListFieldMacro: AccessorMacro, PeerMacro {
         providingAccessorsOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [AccessorDeclSyntax] {
-        guard let variableDecl = declaration.as(VariableDeclSyntax.self),
-              let binding = variableDecl.bindings.first,
-              let identifier = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
-              let typeAnnotation = binding.typeAnnotation?.type
+        guard
+            let property = declaration.as(VariableDeclSyntax.self),
+            let identifier = property.identifier,
+            let type = property.type
         else {
             return []
         }
 
-        let propertyType = typeAnnotation.trimmedDescription
+        let propertyType = type.trimmedDescription
         let modelType = listFieldGenericType(from: propertyType)
         let (key, _) = extractFieldArguments(from: node, propertyName: identifier)
         let keyLiteral = "\"\(key)\""
+
+        // Extract action from attribute, default to .none
+        let labelExprList = node.arguments?.as(LabeledExprListSyntax.self) ?? []
+        let actionArg = labelExprList.first { $0.label?.text == "action" }
+        let actionValue = actionArg?.expression.trimmedDescription ?? ".none"
 
         let getAccessor: AccessorDeclSyntax = """
         get {
@@ -77,7 +73,7 @@ public enum CKReferenceListFieldMacro: AccessorMacro, PeerMacro {
         let initAccessor: AccessorDeclSyntax = """
         @storageRestrictions(initializes: _\(raw: identifier))
         init {
-            self._\(raw: identifier) = CKReferenceListField<\(raw: modelType)>(wrappedValue: newValue, \(raw: keyLiteral), action: .none)
+            self._\(raw: identifier) = CKReferenceListField<\(raw: modelType)>(wrappedValue: newValue, \(raw: keyLiteral), action: \(raw: actionValue))
         }
         """
 

@@ -11,25 +11,18 @@ public enum CKFieldMacro: AccessorMacro, PeerMacro {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        guard let variableDecl = declaration.as(VariableDeclSyntax.self),
-              let binding = variableDecl.bindings.first,
-              let identifier = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
-              let typeAnnotation = binding.typeAnnotation?.type
+        guard
+            let property = declaration.as(VariableDeclSyntax.self),
+            let identifier = property.identifier,
+            let type = property.type
         else {
             return []
         }
 
-        let typeName = typeAnnotation.trimmedDescription
-        let (key, defaultValueExpr) = extractFieldArguments(from: node, propertyName: identifier)
-        let keyLiteral = "\"\(key)\""
+        let typeName = type.trimmedDescription
 
-        // var _name = CKField<Type>("key", default: defaultValue)
-        let storageDecl: DeclSyntax
-        if let defaultValueExpr {
-            storageDecl = "var _\(raw: identifier) = CKField<\(raw: typeName)>(\(raw: keyLiteral), default: \(raw: defaultValueExpr))"
-        } else {
-            storageDecl = "var _\(raw: identifier) = CKField<\(raw: typeName)>(\(raw: keyLiteral))"
-        }
+        // var _name: CKField<Type>
+        let storageDecl: DeclSyntax = "var _\(raw: identifier): CKField<\(raw: typeName)>"
 
         // var $name: CKField<Type> { _name.projectedValue }
         let projectedDecl: DeclSyntax = """
@@ -46,15 +39,15 @@ public enum CKFieldMacro: AccessorMacro, PeerMacro {
         providingAccessorsOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [AccessorDeclSyntax] {
-        guard let variableDecl = declaration.as(VariableDeclSyntax.self),
-              let binding = variableDecl.bindings.first,
-              let identifier = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
-              let typeAnnotation = binding.typeAnnotation?.type
+        guard
+            let property = declaration.as(VariableDeclSyntax.self),
+            let identifier = property.identifier,
+            let type = property.type
         else {
             return []
         }
 
-        let typeName = typeAnnotation.trimmedDescription
+        let typeName = type.trimmedDescription
         let (key, _) = extractFieldArguments(from: node, propertyName: identifier)
         let keyLiteral = "\"\(key)\""
 

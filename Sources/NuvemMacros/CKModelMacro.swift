@@ -1,7 +1,7 @@
-import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
+import SwiftDiagnostics
 
 public enum CKModelMacro { }
 
@@ -40,48 +40,7 @@ extension CKModelMacro: MemberMacro {
         var modificationDate: Date?
         """
         
-        let hasExistingInit = structDecl.memberBlock.members.contains { member in
-            member.decl.is(InitializerDeclSyntax.self)
-        }
-        
-        
-        if !hasExistingInit {
-            let properties = structDecl.memberBlock.members.compactMap( { $0.decl.as(VariableDeclSyntax.self) })
-                .filter({ $0.bindings.first?.accessorBlock == nil })
-                .filter({ $0.bindingSpecifier.trimmedDescription != "let" })
-            
-            if !properties.isEmpty {
-                
-                let identifiers = properties.compactMap({ $0.bindings.first?.pattern.as(IdentifierPatternSyntax.self) })
-                let types = properties.compactMap({ $0.bindings.first?.typeAnnotation })
-                
-                let  memberwiseInitDecl: DeclSyntax = """
-            init(\(raw: zip(identifiers, types).map({ "\($0.0.trimmedDescription)\($0.1.trimmedDescription)" }).joined(separator: ", "))) {
-            \(raw: identifiers.map({ "self.\($0.trimmedDescription) = \($0.trimmedDescription)" }).joined(separator: "\n"))
-            }
-            """
-                
-//                initDecls.append(memberwiseInitDecl)
-                let initSignature = identifiers.map { "\($0.trimmedDescription):" }.joined()
-                
-                context.diagnose(
-                    .init(
-                        node: declaration,
-                        message: MacroExpansionWarningMessage("'@CKModel' synthesized initializer is deprecated"),
-                        fixIt: FixIt(
-                            message: MacroExpansionFixItMessage("Add 'init(\(initSignature))'"),
-                            changes: [
-                                .replaceText(
-                                    range: declaration.memberBlock.rightBrace.position..<declaration.memberBlock.rightBrace.position,
-                                    with: "\n" + memberwiseInitDecl.description,
-                                    in: Syntax(declaration)
-                                )
-                            ]
-                        )
-                    )
-                )
-            }
-        }
+
                 
         return [
             observableTypealiasDecl,
@@ -105,41 +64,134 @@ extension CKModelMacro: ExtensionMacro {
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
         
-        let decl = try ExtensionDeclSyntax(
-        #"""
-        extension \#(type.trimmed): CKModel { }
-        """#
-        )
+        guard let structDecl = declaration.as(StructDeclSyntax.self) else { return [] }
+        
+        let hasExistingEmptyInit = structDecl.memberBlock.members.contains { member in
+            guard let initDecl = member.decl.as(InitializerDeclSyntax.self) else { return false }
+            return initDecl.signature.parameterClause.parameters.isEmpty
+        }
+        
+        var fieldIds: [String] = []
+        var fieldTypes: [String] = []
+        var fieldAttrs: [AttributeSyntax] = []
+        
+        for member in structDecl.memberBlock.members {
+            guard
+                let variable = member.decl.as(VariableDeclSyntax.self),
+                let binding = variable.bindings.first,
+                let identifier = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
+                let propertyType = binding.typeAnnotation?.type.trimmedDescription
+            else {
+                continue
+            }
+            
+            if let attributeSyntax = fieldMacroAttribute(variable) {
+                fieldIds.append(identifier)
+                fieldTypes.append(propertyType)
+                fieldAttrs.append(attributeSyntax)
+            } else {
+                // Warn for non-field, non-optional stored properties without default values.
+                guard !variable.modifiers.contains(where: { $0.name.text == "static" }) else { continue }
+                for binding in variable.bindings {
+                    if binding.accessorBlock != nil { continue }
+                    if binding.initializer != nil { continue }
+                    guard let pattern = binding.pattern.as(IdentifierPatternSyntax.self),
+                          let typeAnnotation = binding.typeAnnotation
+                    else { continue }
+                    
+                    if !isOptionalType(typeAnnotation.type.trimmedDescription) {
+                        context.diagnose(Diagnostic(
+                            node: Syntax(pattern),
+                            message: NonOptionalPropertyWarning(propertyName: pattern.identifier.text)
+                        ))
+                    }
+                }
+            }
+        }
+        
+        // Check 2: When NO field properties exist, or ALL of them have optional
+        // types, Swift auto-synthesizes init(). This happens because each init
+        // accessor's implicit newValue parameter defaults to nil for optional
+        // types. In this case we must NOT generate init() in the extension
+        // to avoid "Invalid redeclaration of synthesized 'init()'".
+        let willAutoSynthesizeInit = fieldIds.isEmpty
+            || fieldIds.indices.allSatisfy { isOptionalType(fieldTypes[$0]) }
+        
+        if hasExistingEmptyInit || willAutoSynthesizeInit {
+            // Swift provides init() (either user-written or auto-synthesized).
+            // Extension just needs the conformance declaration.
+            return [try ExtensionDeclSyntax("extension \(type.trimmed): CKModel { }")]
+        }
+        
+        // Generate init() with storage property initialization.
+        var initStatements: [String] = []
+        for (index, attrSyntax) in fieldAttrs.enumerated() {
+            let attrName = attrSyntax.attributeName.trimmedDescription
+            let identifier = fieldIds[index]
+            let propertyType = fieldTypes[index]
+            
+            let (key, _) = extractFieldArguments(from: attrSyntax, propertyName: identifier)
+            let keyLiteral = "\"\(key)\""
+            
+            // Determine storage type and generic parameter
+            let storageType: String
+            let genericParam: String
+            switch attrName {
+            case "CKField":
+                storageType = "CKField"
+                genericParam = propertyType
+            case "CKAssetField":
+                storageType = "CKAssetField"
+                genericParam = propertyType
+            case "CKAssetListField":
+                storageType = "CKAssetListField"
+                genericParam = listFieldGenericType(from: propertyType)
+            case "CKReferenceField":
+                storageType = "CKReferenceField"
+                genericParam = referenceFieldGenericType(from: propertyType)
+            case "CKReferenceListField":
+                storageType = "CKReferenceListField"
+                genericParam = listFieldGenericType(from: propertyType)
+            default:
+                continue
+            }
+            
+            // Collect all labeled arguments from the attribute (skip the positional key)
+            let labelExprList = attrSyntax.arguments?.as(LabeledExprListSyntax.self) ?? []
+            var extraArgs: [String] = []
+            for arg in labelExprList {
+                if arg.label == nil { continue }
+                if let label = arg.label?.text {
+                    extraArgs.append("\(label): \(arg.expression.trimmedDescription)")
+                }
+            }
+            
+            // Default action: .none for reference fields if not specified
+            if attrName == "CKReferenceField" || attrName == "CKReferenceListField" {
+                let hasAction = extraArgs.contains { $0.hasPrefix("action:") }
+                if !hasAction {
+                    extraArgs.append("action: .none")
+                }
+            }
+            
+            let allArgs = ([keyLiteral] + extraArgs).joined(separator: ", ")
+            initStatements.append("    self._\(identifier) = \(storageType)<\(genericParam)>(\(allArgs))")
+        }
+        
+        let initDecl: DeclSyntax = """
+            init() {
+            \(raw: initStatements.joined(separator: "\n"))
+            }
+            """
+        
+        let decl = try ExtensionDeclSyntax("""
+            extension \(type.trimmed): CKModel {
+            \(initDecl)
+            }
+            """)
         
         return [decl]
         
-    }
-    
-}
-
-extension CKModelMacro: MemberAttributeMacro {
-    
-    public static func expansion(
-        of node: AttributeSyntax,
-        attachedTo declaration: some DeclGroupSyntax,
-        providingAttributesFor member: some DeclSyntaxProtocol,
-        in context: some MacroExpansionContext
-    ) throws -> [AttributeSyntax] {
-        
-        guard
-            let variable = member.as(VariableDeclSyntax.self),
-            variable.bindings.first?.accessorBlock == nil,
-            variable.bindingSpecifier == .keyword(.var),
-            let identifier = variable.bindings.first?.pattern.as(IdentifierPatternSyntax.self)?.trimmedDescription
-        else {
-            return []
-        }
-
-        if variable.attributes.isEmpty {
-            return ["@CKField(\(literal: identifier))"]
-        }
-
-        return []
     }
     
 }

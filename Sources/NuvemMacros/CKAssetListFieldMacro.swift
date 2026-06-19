@@ -11,26 +11,19 @@ public enum CKAssetListFieldMacro: AccessorMacro, PeerMacro {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        guard let variableDecl = declaration.as(VariableDeclSyntax.self),
-              let binding = variableDecl.bindings.first,
-              let identifier = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
-              let typeAnnotation = binding.typeAnnotation?.type
+        guard
+            let property = declaration.as(VariableDeclSyntax.self),
+            let identifier = property.identifier,
+            let type = property.type
         else {
             return []
         }
 
-        let propertyType = typeAnnotation.trimmedDescription
+        let propertyType = type.trimmedDescription
         let elementType = listFieldGenericType(from: propertyType)
-        let (key, defaultValueExpr) = extractFieldArguments(from: node, propertyName: identifier)
-        let keyLiteral = "\"\(key)\""
 
-        // var _name = CKAssetListField<Element>("key", default: defaultValue)
-        let storageDecl: DeclSyntax
-        if let defaultValueExpr {
-            storageDecl = "var _\(raw: identifier) = CKAssetListField<\(raw: elementType)>(\(raw: keyLiteral), default: \(raw: defaultValueExpr))"
-        } else {
-            storageDecl = "var _\(raw: identifier) = CKAssetListField<\(raw: elementType)>(\(raw: keyLiteral))"
-        }
+        // var _name: CKAssetListField<Element>
+        let storageDecl: DeclSyntax = "var _\(raw: identifier): CKAssetListField<\(raw: elementType)>"
 
         // var $name: CKAssetListField<Element> { _name.projectedValue }
         let projectedDecl: DeclSyntax = """
@@ -47,15 +40,15 @@ public enum CKAssetListFieldMacro: AccessorMacro, PeerMacro {
         providingAccessorsOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [AccessorDeclSyntax] {
-        guard let variableDecl = declaration.as(VariableDeclSyntax.self),
-              let binding = variableDecl.bindings.first,
-              let identifier = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
-              let typeAnnotation = binding.typeAnnotation?.type
+        guard
+            let property = declaration.as(VariableDeclSyntax.self),
+            let identifier = property.identifier,
+            let type = property.type
         else {
             return []
         }
 
-        let propertyType = typeAnnotation.trimmedDescription
+        let propertyType = type.trimmedDescription
         let elementType = listFieldGenericType(from: propertyType)
         let (key, _) = extractFieldArguments(from: node, propertyName: identifier)
         let keyLiteral = "\"\(key)\""

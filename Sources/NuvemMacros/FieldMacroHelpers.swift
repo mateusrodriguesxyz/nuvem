@@ -1,5 +1,7 @@
 import Foundation
 import SwiftSyntax
+import SwiftSyntaxBuilder
+import SwiftDiagnostics
 
 /// Extracts the key string and optional default value expression from a field macro attribute.
 ///
@@ -25,12 +27,7 @@ func extractFieldArguments(from node: AttributeSyntax, propertyName: String) -> 
                 break
             }
         } else {
-            // Unlabeled first argument is the key
-            if let stringLiteral = argument.expression.as(StringLiteralExprSyntax.self),
-               let firstSegment = stringLiteral.segments.first,
-               firstSegment.is(StringSegmentSyntax.self) {
-                key = firstSegment.as(StringSegmentSyntax.self)?.content.text
-            }
+            key = argument.expression.as(StringLiteralExprSyntax.self)?.representedLiteralValue
         }
     }
 
@@ -65,6 +62,32 @@ func stripArray(from typeName: String) -> String {
     return trimmed
 }
 
+/// Checks if a type string represents an optional type.
+/// Returns true for `T?`, `Optional<T>`, and nested forms like `[T]?`.
+func isOptionalType(_ typeName: String) -> Bool {
+    let trimmed = typeName.trimmingCharacters(in: .whitespaces)
+    return trimmed.hasSuffix("?") || trimmed.hasPrefix("Optional<")
+}
+
+/// Known field macro attribute names.
+private let fieldMacroNames: Set = ["CKField", "CKAssetField", "CKAssetListField", "CKReferenceField", "CKReferenceListField"]
+
+/// Returns true if a variable declaration has a field macro attribute.
+func hasFieldMacroAttribute(_ variable: VariableDeclSyntax) -> Bool {
+    fieldMacroAttribute(variable) != nil
+}
+
+/// Returns the field macro `AttributeSyntax` if the variable declaration has one, otherwise nil.
+func fieldMacroAttribute(_ variable: VariableDeclSyntax) -> AttributeSyntax? {
+    for attr in variable.attributes {
+        guard case let .attribute(attributeSyntax) = attr else { continue }
+        if fieldMacroNames.contains(attributeSyntax.attributeName.trimmedDescription) {
+            return attributeSyntax
+        }
+    }
+    return nil
+}
+
 /// Decides the backing generic type for a reference field.
 /// For `M2?` returns `M2`. For `M2` returns `M2` (shouldn't happen).
 func referenceFieldGenericType(from propertyType: String) -> String {
@@ -75,4 +98,23 @@ func referenceFieldGenericType(from propertyType: String) -> String {
 /// For `[Data]` returns `Data`. For `[M2]` returns `M2`.
 func listFieldGenericType(from propertyType: String) -> String {
     stripArray(from: propertyType)
+}
+
+extension VariableDeclSyntax {
+    var identifier: String? {
+        bindings.first?.pattern.as(IdentifierPatternSyntax.self)?.identifier.text
+    }
+    var type: TypeSyntax? {
+        bindings.first?.typeAnnotation?.type
+    }
+}
+
+/// Warning reported when a non-field, non-optional stored property lacks a default value.
+struct NonOptionalPropertyWarning: DiagnosticMessage {
+    let propertyName: String
+    var message: String {
+        "@CKModel requires non-optional property '\(propertyName)' to have a default value"
+    }
+    var diagnosticID: MessageID { MessageID(domain: "NuvemMacros", id: "nonOptionalProperty") }
+    var severity: DiagnosticSeverity { .error }
 }
