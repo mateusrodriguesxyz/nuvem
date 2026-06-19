@@ -3,6 +3,48 @@ import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 import SwiftDiagnostics
 
+struct FieldAttributeInfo {
+    let key: String?
+}
+
+struct ReferenceFieldAttributeInfo {
+    let key: String?
+    let action: String?
+}
+
+private func extractKey(from node: AttributeSyntax) -> String? {
+    node.arguments?.as(LabeledExprListSyntax.self)?
+        .first(where: { $0.label == nil })?
+        .expression.as(StringLiteralExprSyntax.self)?
+        .representedLiteralValue
+}
+
+private func fieldAttributeInfo(from node: AttributeSyntax) -> FieldAttributeInfo {
+    FieldAttributeInfo(key: extractKey(from: node))
+}
+
+private func referenceFieldAttributeInfo(from node: AttributeSyntax) -> ReferenceFieldAttributeInfo {
+    ReferenceFieldAttributeInfo(
+        key: extractKey(from: node),
+        action: node.arguments?.as(LabeledExprListSyntax.self)?
+            .first(where: { $0.label?.text == "action" })?
+            .expression.trimmedDescription
+    )
+}
+
+/// Collects labeled argument strings from an attribute syntax node, optionally excluding certain labels.
+/// Each returned string is in the form "label: value".
+private func labeledArgs(from node: AttributeSyntax, excluding: Set<String> = []) -> [String] {
+    let labelExprList = node.arguments?.as(LabeledExprListSyntax.self) ?? []
+    var result: [String] = []
+    for arg in labelExprList {
+        guard let label = arg.label?.text else { continue }
+        if excluding.contains(label) { continue }
+        result.append("\(label): \(arg.expression.trimmedDescription)")
+    }
+    return result
+}
+
 public enum CKModelMacro { }
 
 extension CKModelMacro: MemberMacro {
@@ -40,8 +82,6 @@ extension CKModelMacro: MemberMacro {
         var modificationDate: Date?
         """
         
-
-                
         return [
             observableTypealiasDecl,
             creationDateDecl,
@@ -130,9 +170,6 @@ extension CKModelMacro: ExtensionMacro {
             let identifier = fieldIds[index]
             let propertyType = fieldTypes[index]
             
-            let (key, _) = extractFieldArguments(from: attrSyntax, propertyName: identifier)
-            let keyLiteral = "\"\(key)\""
-            
             // Determine storage type and generic parameter
             let storageType: String
             let genericParam: String
@@ -156,26 +193,22 @@ extension CKModelMacro: ExtensionMacro {
                 continue
             }
             
-            // Collect all labeled arguments from the attribute (skip the positional key)
-            let labelExprList = attrSyntax.arguments?.as(LabeledExprListSyntax.self) ?? []
-            var extraArgs: [String] = []
-            for arg in labelExprList {
-                if arg.label == nil { continue }
-                if let label = arg.label?.text {
-                    extraArgs.append("\(label): \(arg.expression.trimmedDescription)")
-                }
-            }
+            let isReference = attrName == "CKReferenceField" || attrName == "CKReferenceListField"
             
-            // Default action: .none for reference fields if not specified
-            if attrName == "CKReferenceField" || attrName == "CKReferenceListField" {
-                let hasAction = extraArgs.contains { $0.hasPrefix("action:") }
-                if !hasAction {
-                    extraArgs.append("action: .none")
-                }
+            if isReference {
+                let info = referenceFieldAttributeInfo(from: attrSyntax)
+                let keyLiteral = "\"\(info.key ?? identifier)\""
+                let extraArgs = labeledArgs(from: attrSyntax, excluding: ["action"])
+                let actionValue = info.action ?? ".none"
+                let allArgs = ([keyLiteral] + extraArgs + ["action: \(actionValue)"]).joined(separator: ", ")
+                initStatements.append("self._\(identifier) = \(storageType)<\(genericParam)>(\(allArgs))")
+            } else {
+                let info = fieldAttributeInfo(from: attrSyntax)
+                let keyLiteral = "\"\(info.key ?? identifier)\""
+                let extraArgs = labeledArgs(from: attrSyntax)
+                let allArgs = ([keyLiteral] + extraArgs).joined(separator: ", ")
+                initStatements.append("self._\(identifier) = \(storageType)<\(genericParam)>(\(allArgs))")
             }
-            
-            let allArgs = ([keyLiteral] + extraArgs).joined(separator: ", ")
-            initStatements.append("    self._\(identifier) = \(storageType)<\(genericParam)>(\(allArgs))")
         }
         
         let initDecl: DeclSyntax = """

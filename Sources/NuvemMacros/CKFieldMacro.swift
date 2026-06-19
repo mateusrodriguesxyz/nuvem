@@ -46,8 +46,6 @@ public enum CKFieldMacro: AccessorMacro, PeerMacro {
         else {
             return []
         }
-
-        let typeName = type.trimmedDescription
         let (key, _) = extractFieldArguments(from: node, propertyName: identifier)
         let keyLiteral = "\"\(key)\""
 
@@ -66,7 +64,7 @@ public enum CKFieldMacro: AccessorMacro, PeerMacro {
         let initAccessor: AccessorDeclSyntax = """
         @storageRestrictions(initializes: _\(raw: identifier))
         init {
-            self._\(raw: identifier) = CKField<\(raw: typeName)>(wrappedValue: newValue, \(raw: keyLiteral))
+            self._\(raw: identifier) = CKField<\(type)>(wrappedValue: newValue, \(raw: keyLiteral))
         }
         """
 
