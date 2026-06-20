@@ -28,7 +28,7 @@ public macro CKReferenceListField(_ key: String, default defaultValue: Any? = ni
 public protocol CKModel: CustomDebugStringConvertible, Identifiable where ID == String {
     static var recordType: CKRecord.RecordType { get }
     var record: CKRecord! { get set }
-    init()
+    init(record: CKRecord)
 }
 
 extension CKModel {
@@ -46,12 +46,6 @@ extension CKModel {
     public var modificationDate: Date? { record.modificationDate }
     
     public var creationDate: Date? { record.creationDate }
-    
-    public init(record: CKRecord) {
-        self.init()
-        self.record = record
-        bindRecordToFields()
-    }
     
 }
 
@@ -74,7 +68,7 @@ extension CKModel {
         allKeyPaths.values.compactMap { self[keyPath: $0] as? (any _CKFieldProtocol) }
     }
     
-    func bindRecordToFields() {
+    public func bindRecordToFields() {
         for field in allFields {
             assert(field.storage.record == nil)
             field.storage.record = self.record
@@ -199,4 +193,9 @@ extension Binding where Value: CKModel {
         _ = try await value[keyPath: field].load(on: database)
         self.wrappedValue = value
     }
+}
+
+extension CKModel {
+    @available(iOS 17.0, *)
+    public typealias Observable = CKObservable<Self>
 }

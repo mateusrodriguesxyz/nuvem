@@ -4,8 +4,6 @@ import SwiftSyntaxMacros
 
 public enum CKFieldMacro: AccessorMacro, PeerMacro {
 
-    // MARK: - PeerMacro
-
     public static func expansion(
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,
@@ -19,20 +17,14 @@ public enum CKFieldMacro: AccessorMacro, PeerMacro {
             return []
         }
 
-        let typeName = type.trimmedDescription
+        let storageDecl: DeclSyntax = "var _\(identifier): CKField<\(type)>"
 
-        // var _name: CKField<Type>
-        let storageDecl: DeclSyntax = "var _\(raw: identifier): CKField<\(raw: typeName)>"
-
-        // var $name: CKField<Type> { _name.projectedValue }
         let projectedDecl: DeclSyntax = """
-        var $\(raw: identifier): CKField<\(raw: typeName)> { _\(raw: identifier).projectedValue }
+        var $\(identifier): CKField<\(type)> { _\(identifier).projectedValue }
         """
 
         return [storageDecl, projectedDecl]
     }
-
-    // MARK: - AccessorMacro
 
     public static func expansion(
         of node: AttributeSyntax,
@@ -46,25 +38,24 @@ public enum CKFieldMacro: AccessorMacro, PeerMacro {
         else {
             return []
         }
-        let (key, _) = extractFieldArguments(from: node, propertyName: identifier)
-        let keyLiteral = "\"\(key)\""
+        let key = fieldAttributeInfo(from: node).key ?? identifier.identifier.text
 
         let getAccessor: AccessorDeclSyntax = """
         get {
-            _\(raw: identifier).wrappedValue
+            _\(identifier).wrappedValue
         }
         """
 
         let setAccessor: AccessorDeclSyntax = """
         set {
-            _\(raw: identifier).wrappedValue = newValue
+            _\(identifier).wrappedValue = newValue
         }
         """
 
         let initAccessor: AccessorDeclSyntax = """
-        @storageRestrictions(initializes: _\(raw: identifier))
+        @storageRestrictions(initializes: _\(identifier))
         init {
-            self._\(raw: identifier) = CKField<\(type)>(wrappedValue: newValue, \(raw: keyLiteral))
+            self._\(identifier) = CKField<\(type)>(wrappedValue: newValue, \(literal: key))
         }
         """
 

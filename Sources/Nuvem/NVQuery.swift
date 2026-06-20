@@ -85,7 +85,9 @@ public struct NVQuery<T: CKModel>: DynamicProperty {
 
 public final class AnyCKModel: CKModel {
     public var record: CKRecord!
-    public init() { }
+    public init(record: CKRecord) {
+        self.record = record
+    }
 }
 
 @available(iOS 16.0, *)

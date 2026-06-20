@@ -48,9 +48,10 @@ public final class CKQueryBuilder<Model> where Model: CKModel {
             fieldsToExclude.append(field)
         }
         let fieldKeysToExclude = fieldsToExclude.map { $0.key }
-        let allKeyPaths = Model().allKeyPaths.values
+        let model = Model(record: CKRecord(recordType: Model.recordType))
+        let allKeyPaths = model.allKeyPaths.values
         for keyPath in allKeyPaths {
-            if let _field = Model()[keyPath: keyPath] as? (any _CKFieldProtocol), !fieldKeysToExclude.contains(_field.key) {
+            if let _field = model[keyPath: keyPath] as? (any _CKFieldProtocol), !fieldKeysToExclude.contains(_field.key) {
                 desiredKeysBuilder.add(keyPath)
             }
         }
@@ -110,10 +111,11 @@ public final class CKQueryBuilder<Model> where Model: CKModel {
             fieldsToExclude.append(field)
         }
         let fieldKeysToExclude = fieldsToExclude.map { $0.key }
-        let allKeyPaths = Value().allKeyPaths.values
+        let value = Value(record: CKRecord(recordType: Value.recordType))
+        let allKeyPaths = value.allKeyPaths.values
         var desiredFields = [PartialKeyPath<Value>]()
         for keyPath in allKeyPaths {
-            if let _field = Value()[keyPath: keyPath] as? (any _CKFieldProtocol), !fieldKeysToExclude.contains(_field.key) {
+            if let _field = value[keyPath: keyPath] as? (any _CKFieldProtocol), !fieldKeysToExclude.contains(_field.key) {
                 desiredFields.append(keyPath)
             }
         }

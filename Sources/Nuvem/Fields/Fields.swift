@@ -5,6 +5,7 @@
 //  Created by Mateus Rodrigues on 15/04/26.
 //
 
+import CloudKit
 
 public struct Fields<Model: CKModel> {
     enum Mode {
@@ -54,9 +55,9 @@ extension Fields {
                     return nil
                 } else {
                     let fieldKeysToExclude = fields.map { $0.key }
-                    let allKeyPaths = Model().allKeyPaths.values
+                    let model = Model(record: CKRecord(recordType: Model.recordType))
+                    let allKeyPaths = model.allKeyPaths.values
                     var desiredKeys: [String] = []
-                    let model = Model()
                     for keyPath in allKeyPaths {
                         if let _field = model[keyPath: keyPath] as? (any _CKFieldProtocol), !fieldKeysToExclude.contains(_field.key) {
                             desiredKeys.append(_field.key)

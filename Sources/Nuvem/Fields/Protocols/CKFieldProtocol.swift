@@ -8,12 +8,12 @@ public protocol CKFieldProtocol {
 }
 
 extension KeyPath where Root: CKModel, Value: CKFieldProtocol {
-    public var key: String { Root()[keyPath: self].key }
+    public var key: String { Root(record: CKRecord(recordType: Root.recordType))[keyPath: self].key }
 }
 
 extension PartialKeyPath where Root: CKModel {
     @_disfavoredOverload
-    var key: String { (Root()[keyPath: self] as! any CKFieldProtocol).key }
+    var key: String { (Root(record: CKRecord(recordType: Root.recordType))[keyPath: self] as! any CKFieldProtocol).key }
 }
 
 protocol _CKFieldProtocol: CKFieldProtocol {
